@@ -3,11 +3,10 @@ import xarray as xr
 import numpy as np
 import sys, os
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import get_exps
+import atmospy
+
 import string
 
 from cartopy import crs as ccrs
@@ -19,9 +18,9 @@ import matplotlib.path as mpath
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-
+figpath = '/user/home/xz19136/Figures/mars_analysis/conc_ratios/'
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = atmospy.stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -59,7 +58,7 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
                    
         
         
-        tind = funcs.get_init_sol(tind)
+        tind = atmospy.get_init_sol(tind)
 
         if j == 0:
             ls = d.mars_solar_long.isel(time=tind).values
@@ -157,7 +156,7 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
     #             borderaxespad=0, fontsize='large')
     fig.suptitle('%s initialized at Ls = $%i^\circ$' % (tname, ls))
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/conc_ratios/dust_' + \
+    fig.savefig(figpath+'dust_' + \
             '%s_%03d_%s_%s.png' % (tname, tind, hem, method),
             bbox_inches='tight', dpi=300)
 
@@ -191,7 +190,7 @@ def plot_polar_conc_ratio(tname='test_tracer', isentropic=False, \
                        
             
             
-            tind = funcs.get_init_sol(tind)
+            tind = atmospy.get_init_sol(tind)
 
             if i == 0:
                 ls = d.mars_solar_long.isel(time=tind).values
@@ -303,7 +302,7 @@ def plot_polar_conc_ratio(tname='test_tracer', isentropic=False, \
     #             borderaxespad=0, fontsize='large')
     fig.suptitle('%s initialized at Ls = $%i^\circ$' % (tname, ls))
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/conc_ratios/all_exp_' + \
+    fig.savefig(figpath+'all_exp_' + \
             '%s_%03d_%s_%s.png' % (tname, tind, hem, method),
             bbox_inches='tight', dpi=300)
 
@@ -351,7 +350,7 @@ def plot_multiple_times_dust(tname='test_tracer', isentropic=True, \
 
                 hem = hems[h]
 
-                tind = funcs.get_init_sol(tinds[t])
+                tind = atmospy.get_init_sol(tinds[t])
                 tind = tind % 360
                 if hem == 'sh':
                     tind = tind + 360
@@ -461,7 +460,7 @@ def plot_multiple_times_dust(tname='test_tracer', isentropic=True, \
     #axs[1].legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
     #             borderaxespad=0, fontsize='large')
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/conc_ratios/dust_' + \
+    fig.savefig(figpath+'dust_' + \
             '%s_%s_%s_%03d-%03d.png' % (tname, hem, method, tinds[0], tinds[-1]),
             bbox_inches='tight', dpi=300)
 
@@ -507,7 +506,7 @@ def plot_multiple_times(tname='test_tracer', isentropic=True, \
 
 
 
-                tind = funcs.get_init_sol(tinds[t])
+                tind = atmospy.get_init_sol(tinds[t])
 
                 if i == 0:
                     ls = d.mars_solar_long.isel(time=tind).values
@@ -623,7 +622,7 @@ def plot_multiple_times(tname='test_tracer', isentropic=True, \
     #axs[1].legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
     #             borderaxespad=0, fontsize='large')
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/conc_ratios/all_exp_' + \
+    fig.savefig(figpath+ 'all_exp_' + \
             '%s_%s_%s_%03d-%03d.png' % (tname, hem, method, tinds[0], tinds[-1]),
             bbox_inches='tight', dpi=300)
     
@@ -643,7 +642,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
 
     for i in range(len(exps)):
         exp = exps[i]
-        exp_names, titles, _, _ = get_exps(exp)
+        exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         if exp == 'curr-ecc':
             exp = '$\gamma = 0.093$'
@@ -673,7 +672,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
         for t in range(len(tinds)):
             en = []
             es = []
-            tind = funcs.get_init_sol(tinds[t])
+            tind = atmospy.get_init_sol(tinds[t])
             for j in range(len(exp_names)):
 
                 exp_name = exp_names[j]
@@ -847,7 +846,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
     #axs[1].legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
     #             borderaxespad=0, fontsize='large')
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/conc_ratios/' + \
+    fig.savefig(figpath + \
             '%s_%s_%s_%03d-%03d_%i.%s' % (tname, hem, method, tinds[0], tinds[-1],ylim,ext),
             bbox_inches='tight', dpi=300)
     
