@@ -52,6 +52,15 @@ rsphere = 3.3962e6
 
 import tropd_exo as pyt
 
+def open_files(path, exps, keff=False):
+    if keff:
+        ds = xr.open_dataset(
+        	path + exps + '_keff_test_tracer.nc', decode_times = False,)
+    else:
+        ds = xr.open_dataset(
+        	path + exps + '_atmos.nc', decode_times = False,)
+    return ds
+
 def duplicate_axis(ax, newpos):
     ax2 = ax.twiny()
     ax2.set_xticks(newpos)
@@ -61,23 +70,7 @@ def duplicate_axis(ax, newpos):
     ax2.set_xlim(ax.get_xlim())
     
     return ax2
-  
- def open_files(path, exp_name, isentropic=False, tname='test_tracer'):
-    
-    if not isentropic:
-        isent = ''
-    else:
-        isent = '_isentropic'
-    
-    if tname is not 'test_tracer':
-        tname = 'test_tracer'
-    ds = xr.open_dataset(
-        	path + exp_name + '/keff%s_%s.nc' % (isent, tname), decode_times = False,)
-
-    d = xr.open_dataset(
-        	path + exp_name + '/atmos%s.nc' % isent, decode_times = False,)
-    
-    return ds, d
+ 
 
 def xr_add_cyclic_point(da):
     """
