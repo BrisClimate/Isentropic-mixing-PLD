@@ -7,7 +7,7 @@ import sys, os
 sys.path.append('../')
 
 from atmospy import stereo_plot, lait, calc_PV_max, new_cmap, \
-                    get_timeslice, nf
+                    get_timeslice, nf, get_exps
 
 import string
 

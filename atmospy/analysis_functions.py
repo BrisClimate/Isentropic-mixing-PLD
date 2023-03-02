@@ -50,8 +50,8 @@ kappa   = 1/4.4
 omega   = 7.08822e-05
 rsphere = 3.3962e6
 
-import tropd_exo as pyt
-
+eps = np.arange(10,55,5)
+gamma = [0.093,0.00]
 
 def get_exps(exps):
     
