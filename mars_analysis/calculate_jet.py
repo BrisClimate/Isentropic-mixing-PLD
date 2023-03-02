@@ -1,11 +1,9 @@
 # %%
 
 import os, sys
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 import xarray as xr
-
-import analysis_functions as funcs
-import tropd_exo as pyt
+from atmospy import find_STJ_jets, calc_jet_lat
 from multiprocessing import Pool, cpu_count
 from scipy.signal import find_peaks
 import numpy as np
@@ -23,7 +21,7 @@ rsphere = 3.3962e6 # mean planetary radius
 
 rmars = 3.3962e6
 
-def calculate_EDJ(exp_name):
+def calculate_jet(exp_name):
     swap_file = '%s/%s/atmos.nc' % (path, exp_name)
     new_file = '%s/%s/EDJ.nc' % (path, exp_name)
     try:
@@ -104,7 +102,7 @@ def calculate_EDJ(exp_name):
     
 
         
-        jets_n, jets_s = pyt.find_STJ_jets(d50.values, lat,  lat[b])
+        jets_n, jets_s = find_STJ_jets(d50.values, lat,  lat[b])
 
         for i in range(jets_n.shape[1]):
             x = sum([math.isnan(l) for l in jets_n[:,i]])
@@ -129,7 +127,7 @@ def calculate_EDJ(exp_name):
     except:
         print(exp_name+' failed. Continuing.')
 
-def find_single_EDJ(exp_name):
+def find_single_jet(exp_name):
         swap_file = '%s/%s/atmos.nc' % (path, exp_name)
         new_file = '%s/%s/EDJ.nc' % (path, exp_name)
     #try:
@@ -185,11 +183,11 @@ def find_single_EDJ(exp_name):
             dn = du.where(du.lat > 0, drop=True)
             ds = du.where(du.lat < 0, drop=True)
 
-            phi, mx = funcs.calc_jet_lat(dn, lat_n)
+            phi, mx = calc_jet_lat(dn, lat_n)
             a.append(phi)
             b.append(mx)
 
-            phi, mx = funcs.calc_jet_lat(ds, lat_s)
+            phi, mx = calc_jet_lat(ds, lat_s)
             c.append(phi)
             d.append(mx)
 
@@ -230,6 +228,6 @@ if __name__ == "__main__":
     #    calculate_psi()
 
     with Pool(processes=7) as pool:
-        pool.map(find_single_EDJ, exps)
+        pool.map(find_single_jet, exps)
                     
 # %%
