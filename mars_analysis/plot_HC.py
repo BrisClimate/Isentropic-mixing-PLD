@@ -4,11 +4,11 @@ import numpy as np
 import sys, os
 import math
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import get_exps
+from atmospy import open_files, get_exps, stereo_plot, \
+        Calculate_ZeroCrossing, calc_jet_lat, moving_average, new_cmap
+
 import string
 
 from cartopy import crs as ccrs
@@ -22,7 +22,8 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+figpath = '/user/home/xz19136/Figures/mars_analysis/HC/'
+theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -45,7 +46,7 @@ def get_HC_strength(d):
     for a in range(len(d.time)):
         Psi = psi.isel(time=a)
         try:
-            _, HC_max = funcs.calc_jet_lat(Psi, lat)
+            _, HC_max = calc_jet_lat(Psi, lat)
             s.append(HC_max)
         except:
             s.append(np.nan)
@@ -65,7 +66,7 @@ def get_HC_edge(d):
     for a in range(len(d.time)):
         Psi = psi.isel(time=a)
         try:
-            HC_edge = funcs.Calculate_ZeroCrossing(Psi, lat)
+            HC_edge = Calculate_ZeroCrossing(Psi, lat)
             s.append(HC_edge)
         except:
             s.append(np.nan)
@@ -107,10 +108,10 @@ def plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'], \
             psi0n = get_HC_edge(ds.where(ds.lat>0,drop=True))
             psi0s = get_HC_edge(ds.where(ds.lat<0,drop=True).sortby('lat',ascending=False))
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                psi0n = funcs.moving_average(psi0n, smooth)
-                psi0s = funcs.moving_average(psi0s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time  = moving_average(ds.time, smooth)
+                psi0n = moving_average(psi0n, smooth)
+                psi0s = moving_average(psi0s, smooth)
+                ls    = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 psi0n = psi0n
@@ -167,7 +168,7 @@ def plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/HC/' \
+    fig.savefig(figpath \
                 + 'HC_edge.%s' % ext, dpi=300,
                 bbox_inches='tight')
 
@@ -211,10 +212,10 @@ def plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
             psi0s = [-i/10**8 for i in psi_0s]
 
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                psi0n = funcs.moving_average(psi0n, smooth)
-                psi0s = funcs.moving_average(psi0s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time  = moving_average(ds.time, smooth)
+                psi0n = moving_average(psi0n, smooth)
+                psi0s = moving_average(psi0s, smooth)
+                ls    = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 psi0n = psi0n
@@ -275,7 +276,7 @@ def plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/HC/' \
+    fig.savefig(figpath \
                 + 'HC_strength.%s' % ext, dpi=300,
                 bbox_inches='tight')
 
@@ -286,7 +287,7 @@ def plot_psi_crosssection(exp_name, tind=101,edge=False,ext='png'):
 
     lims = [-2,2]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='both',i=10)
+    boundaries, cmap, norm = new_cmap(lims, extend='both',i=10)
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(6, 4))
 
     c1 = axs.contourf(ds.lat, ds.pfull, ds.psi.transpose()/10**9,
@@ -301,7 +302,7 @@ def plot_psi_crosssection(exp_name, tind=101,edge=False,ext='png'):
         axs.plot(ds.psi_0s, 1, marker='s')
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/HC/xsect_' + \
+    fig.savefig(figpath + 'xsect_' + \
         '%s_%03d.%s' % (exp_name,tind,ext),
         bbox_inches='tight', dpi=300)
     
