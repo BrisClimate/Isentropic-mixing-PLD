@@ -19,5 +19,8 @@ from xcontour import Contour2D, \
                      latitude_lengths_at, \
                      add_latlon_metrics, \
                      get_planet_parameters
+from PVmodule import potential_temperature, \
+                     potential_vorticity_baroclinic, \
+                     isent_interp,
 
 __version__ = "0.0.1"
