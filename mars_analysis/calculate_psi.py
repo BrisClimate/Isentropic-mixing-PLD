@@ -4,10 +4,10 @@ import numpy as np
 import xarray as xr
 import os, sys
 import math
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-import tropd_exo as pyt
+from atmospy import TropD_Metric_PSI
+
 from multiprocessing import Pool, cpu_count
 
 path = '/user/work/xz19136/Isca_data'
@@ -85,7 +85,7 @@ def calculate_psi(exp_name):
                 dv = dv.transpose("lat","pfull").values
                 du = du.transpose("lat","pfull").values
                 dT = dT.transpose("lat","pfull").values
-                psi0s, psi0n, psi = pyt.TropD_Metric_PSI(dv, lat, lev,
+                psi0s, psi0n, psi = TropD_Metric_PSI(dv, lat, lev,
                                     method = "Psi_3_0.3",spb=spb,pb=pb,
                                     Radius=rmars, Grav=gmars)
                 a.append(psi0s)
