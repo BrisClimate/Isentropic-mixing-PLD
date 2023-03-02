@@ -5,10 +5,9 @@ File to add grdStracer to output
 import xarray as xr
 import os, sys
 import numpy as np
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
-import analysis_functions as funcs
-import PVmodule as PV
-import tropd_exo as pyt
+sys.path.append('../')
+
+from atmospy import filestrings
 
 import calculate_PV_Isca
 
@@ -105,7 +104,7 @@ def append_all_era5():
 def append_grdStrac(exp, r=rmars):
     p_file = 'atmos_daily_interp.nc'
     
-    _, _, i_files = funcs.filestrings(exp, path, 1, 403, p_file)
+    _, _, i_files = filestrings(exp, path, 1, 403, p_file)
     dset = xr.open_mfdataset(
             i_files, concat_dim = 'time', 
             decode_times = False, combine = 'nested',
@@ -238,20 +237,3 @@ if __name__ == "__main__":
     
     for i in exps:
       interp_attrs(i,)
-    #with Pool(processes=7) as pool:
-    #  pool.map(interp_attrs, exps)
-      #interp_attrs(i)
-      #interp_all(i)
-    #for i in eps:
-    #    iterate_over_all(i)
-    #for i in eps:
-    #    print('interp time')
-    #    interp_all(i)
-    #append_all_era5()
-#
-    #with Pool(processes=len(eps)) as pool:        
-    #    pool.map(iterate_over_all, eps)
-    #    pool.map(interp_all, eps)
-        
-    
-# %%
