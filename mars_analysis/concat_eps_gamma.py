@@ -3,10 +3,10 @@ import xarray as xr
 import numpy as np
 import sys, os
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
+from atmospy import open_files, stereo_plot
+
 import string
 
 from cartopy import crs as ccrs
@@ -20,7 +20,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
