@@ -4,11 +4,10 @@ import numpy as np
 import sys, os
 import math
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import get_exps
+from atmospy import open_files, get_exps, stereo_plot, lait, \
+        Calculate_ZeroCrossing, calc_jet_lat, moving_average, new_cmap
 import string
 
 from cartopy import crs as ccrs
@@ -22,7 +21,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -35,7 +34,7 @@ def get_PV_lats_isentropic(di, hem='nh'):
     '''
     Lait-scale PV and then return the latitude of maximum PV on given 
     pressure levels'''
-    laitPV = funcs.lait(di.PV,di.level,theta0,kappa=kappa)
+    laitPV = lait(di.PV,di.level,theta0,kappa=kappa)
 
     l = []
     s = []
@@ -46,10 +45,10 @@ def get_PV_lats_isentropic(di, hem='nh'):
             x = x.where(x != np.nan, drop = True)
             if hem == 'nh':
                 x = x.sortby('lat',ascending=True)
-                phi_PV, PV_max = funcs.calc_jet_lat(x, x.lat)
+                phi_PV, PV_max = calc_jet_lat(x, x.lat)
             else:
                 x = x.sortby('lat',ascending=False)
-                phi_PV, PV_max = funcs.calc_jet_lat(-x, x.lat)                    
+                phi_PV, PV_max = calc_jet_lat(-x, x.lat)                    
             l.append(phi_PV)
             s.append(PV_max)
         except:
@@ -65,7 +64,7 @@ def get_PV_max_isentropic(di, hem='nh'):
     '''
     Lait-scale PV and then return the latitude of maximum PV on given 
     pressure levels'''
-    laitPV = funcs.lait(di.PV,di.level,theta0,kappa=kappa)
+    laitPV = lait(di.PV,di.level,theta0,kappa=kappa)
 
     l = []
     s = []
@@ -75,9 +74,9 @@ def get_PV_max_isentropic(di, hem='nh'):
         
             x = x.where(x != np.nan, drop = True)
             if hem == 'nh':
-                phi_PV, PV_max = funcs.calc_jet_lat(x, x.lat)
+                phi_PV, PV_max = calc_jet_lat(x, x.lat)
             else:
-                phi_PV, PV_max = funcs.calc_jet_lat(-x, x.lat)                    
+                phi_PV, PV_max = calc_jet_lat(-x, x.lat)                    
             l.append(phi_PV)
             s.append(PV_max)
         except:
@@ -127,10 +126,10 @@ def plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'], \
             _, PV_max_s = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
 
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                PV_max_n = funcs.moving_average(PV_max_n, smooth)
-                PV_max_s = funcs.moving_average(PV_max_s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time     = moving_average(ds.time, smooth)
+                PV_max_n = moving_average(PV_max_n, smooth)
+                PV_max_s = moving_average(PV_max_s, smooth)
+                ls       = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 ls = ds.mars_solar_long
@@ -232,10 +231,10 @@ def plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
             phiPV_s, _ = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
 
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                phiPV_n = funcs.moving_average(phiPV_n, smooth)
-                phiPV_s = funcs.moving_average(phiPV_s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time    = moving_average(ds.time, smooth)
+                phiPV_n = moving_average(phiPV_n, smooth)
+                phiPV_s = moving_average(phiPV_s, smooth)
+                ls      = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 ls = ds.mars_solar_long
