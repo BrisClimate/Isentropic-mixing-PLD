@@ -37,7 +37,7 @@ def concat_parameter(isentropic = False):
             exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' + \
                 '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps, gamma)
             print(exp_name)
-            ds, d = open_files(exp_name, isentropic)
+            ds, d = open_files(path,exp_name, isentropic)
             ds = ds.interp({'new':d.lat.values})
             ds['epsilon'] = eps
             
@@ -64,7 +64,7 @@ def concat_attribution(isentropic = False):
             for l in ['', '_lh']:
                 exp_name = 'tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, dust)
                 print(exp_name)
-                ds, d = open_files(exp_name, isentropic)
+                ds, d = open_files(path, exp_name, isentropic)
                 ds = ds.interp({'new':d.lat.values})
                 if l == '_lh':
                     ds['lh'] = 1
@@ -101,7 +101,7 @@ def concat_dust(isentropic = False):
                     '25_gamma_0.093_cdod_clim_scenario_%s' % str(dust)
 
         print(exp_name)
-        ds, d = open_files(exp_name, isentropic)
+        ds, d = open_files(path, exp_name, isentropic)
         ds = ds.interp({'new':d.lat.values})
         ds['dust_scale'] = dust
         a.append(ds)
