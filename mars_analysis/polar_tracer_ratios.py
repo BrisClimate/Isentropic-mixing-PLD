@@ -53,7 +53,7 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
             '25_gamma_0.093_cdod_clim_scenario_' + str(scal[j])
 
         
-        _, d = open_files(path, exp_name, isentropic, tname=tname)
+        _, d = atmospy.open_files(path, exp_name, isentropic, tname=tname)
         print(exp_name)
                    
         
@@ -185,7 +185,7 @@ def plot_polar_conc_ratio(tname='test_tracer', isentropic=False, \
                 '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps[j], gamma[i])
 
             
-            _, d = open_files(path, exp_name, isentropic, tname=tname)
+            _, d = atmospy.open_files(path, exp_name, isentropic, tname=tname)
             print(exp_name)
                        
             
@@ -345,7 +345,7 @@ def plot_multiple_times_dust(tname='test_tracer', isentropic=True, \
                 '25_gamma_0.093_cdod_clim_scenario_' + str(scal[j])
 
 
-                _, d = open_files(path, exp_name, isentropic, tname=tname)
+                _, d = atmospy.open_files(path, exp_name, isentropic, tname=tname)
                 print(exp_name)
 
                 hem = hems[h]
@@ -501,7 +501,7 @@ def plot_multiple_times(tname='test_tracer', isentropic=True, \
                     '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps[j], gamma[i])
 
 
-                _, d = open_files(path, exp_name, isentropic, tname=tname)
+                _, d = atmospy.open_files(path, exp_name, isentropic, tname=tname)
                 print(exp_name)
 
 
@@ -642,6 +642,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
 
     for i in range(len(exps)):
         exp = exps[i]
+        filepath = path + 'mars_analysis/%s_tracer_conc_' % exp
         exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         if exp == 'curr-ecc':
@@ -666,7 +667,6 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
         sm = cm.ScalarMappable(norm=norm, cmap=cmap)
         sm.set_array([])  # this line may be ommitted for matplotlib >= 3.1
 
-        ls = []
         nh = []
         sh = []
         for t in range(len(tinds)):
@@ -680,6 +680,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
                 d = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
             
                 di  =  d.isel(time=[tind,tind+29,tind+360,tind+389])
+                ls = di.mars_solar_long
                 
                 di  = di.test_tracer
                 
@@ -735,6 +736,10 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
             es['hem']=1
             
             hems = [en, es]
+
+            dat = xr.concat(hems, dim="hem")
+            dat['mars_solar_long'] = ls
+            dat.to_netcdf(filepath + '%i.nc' % (tind))
     
             for k in [0,1]:
                 conc = hems[k]
@@ -850,6 +855,172 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
             '%s_%s_%s_%03d-%03d_%i.%s' % (tname, hem, method, tinds[0], tinds[-1],ylim,ext),
             bbox_inches='tight', dpi=300)
     
+
+
+def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
+            tinds=[60,90,120], method='level', level=300, ylim=80, ext='png'):
+    eps = [10,15,20,25,30,35,40,45,50]
+    gamma = [0.093,0.]
+
+    colors = plt.cm.viridis(np.linspace(0,1,int(len(tinds))))
+    matplotlib.rcParams['axes.prop_cycle'] = (
+            cycler('linestyle', ['-','--'])
+        )
+    exps = ['curr-ecc','0-ecc','dust',]#'attribution']
+    fig,  axs  = plt.subplots(nrows=len(exps)-1,ncols=2, figsize = (10,10), dpi = 300)
+    
+
+    for i in range(len(exps)):
+        exp = exps[i]
+        filepath = path + 'mars_analysis/%s_tracer_conc_' % (exp)
+        exp_names, titles, _, _ = atmospy.get_exps(exp)
+        
+        if exp == 'curr-ecc':
+            exp = '$\gamma = 0.093$'
+            lnstl = '-'
+            col = 'xkcd:crimson'
+        elif exp == '0-ecc':
+            exp = '$\gamma = 0.000$'
+            lnstl = '--'
+            col = 'xkcd:teal'
+        elif exp == 'dust':
+            exp = 'Dust Scale'
+            lnstl = '-'
+            col = 'xkcd:darkgreen'
+        elif exp == 'attribution':
+            exp = 'Attribution'
+            lnstl = '-'
+            col = 'k'
+
+        cmap = plt.get_cmap("viridis", len(tinds))
+        norm = matplotlib.colors.BoundaryNorm(np.arange(len(tinds)+1)+0.5,len(tinds))
+        sm = cm.ScalarMappable(norm=norm, cmap=cmap)
+        sm.set_array([])  # this line may be ommitted for matplotlib >= 3.1
+
+        ls = []
+        nh = []
+        sh = []
+        for t in range(len(tinds)):
+            tind = atmospy.get_init_sol(tinds[t])
+            
+            hems = xr.open_dataset(filepath+'%i.nc' % tind, decode_times=False)
+
+    
+            for k in [0,1]:
+                conc = hems.test_tracer.isel(hem=k)
+                
+                rats = conc.isel(time=2*k+1) / conc.isel(time=2*k)
+                
+                if exp == '$\gamma = 0.093$' or exp == '$\gamma = 0.000$':
+                    ax = axs[0, k]
+                elif exp == 'Dust Scale':
+                    ax = axs[1, k]
+                else:
+                    ax = axs[2, k]
+            
+                rs = rats#.isel(time = -1)
+                
+                if k == 0:
+                    nh.append(rs)
+                    labl = 'Init L$_s$: %i$^\circ$' % (hems.mars_solar_long.isel(time=0).values)
+                else:
+                    sh.append(rs)
+                    labl = 'Init L$_s$: %i$^\circ$' % (hems.mars_solar_long.isel(time=2).values)
+                
+                if exp == '$\gamma = 0.000$':
+                    labl = None
+                ax.plot(rs.exp, rs*100, label = labl,linewidth=0.8,
+                    linestyle = lnstl, c = cmap(t),alpha=0.6, zorder=0)
+                
+            #
+            #    ls.append()
+        
+        for k in [0,1]:
+            if exp == '$\gamma = 0.093$' or exp == '$\gamma = 0.000$':
+                ax = axs[0, k]
+            elif exp == 'Dust Scale':
+                ax = axs[1, k]
+            else:
+                ax = axs[2, k]
+            
+            if k == 0:
+                rs = nh
+            else:
+                rs = sh
+            if exp == '$\gamma = 0.000$':
+                labl = None
+            else:
+                labl = 'Winter average'
+
+            rs = xr.concat(rs,dim="time")
+            rs = rs.mean(dim="time")
+            ax.plot(rs.exp, rs*100, label = labl, linewidth=1.7,
+                    linestyle = lnstl, c = 'k',alpha=1,zorder=1)
+            #for b in range(len(rs[0])):
+            #    for a in range(len(rs)):
+            #        r += rs[a][b]
+
+    axs[0,0].set_title('NH')
+    axs[0,1].set_title('SH')
+    m1 = []
+    m2 = []
+    for i, ax in enumerate(fig.axes):
+        ax.text(-0.01, 1.03, string.ascii_lowercase[i]+')', transform=ax.transAxes)
+        m1.append(ax.get_ylim()[0])
+        m2.append(ax.get_ylim()[1])
+    
+    for i, ax in enumerate(fig.axes):
+        ax.set_ylim([np.min(m1),np.max(m2)])
+        ax.legend(loc = 'lower left')
+
+    for ax in [axs[0,0], axs[0,1]]:
+        ax.set_xticks(np.arange(len(eps)))
+        ax.set_xticklabels(eps)
+        ax.set_xlabel('Obliquity $\epsilon$ ($^\circ$)')
+        #for i, yi in enumerate(y.T):
+        #   ax.plot(x, yi, c=cmap(i))
+        ax2 = ax.twinx()
+        ax2.set_yticks([])
+        ax2.plot([],[],c='k',linestyle='-' ,label='$\gamma=0.093$')
+        ax2.plot([],[],c='k',linestyle='--',label='$\gamma=0.000$')
+        ax2.legend()
+    for ax in [axs[1,0], axs[1,1]]:
+        ax.set_xticks(np.arange(4))
+        ax.set_xticklabels(['1/2','1','2','4'])
+        ax.set_xlabel('Dust Scale ($\\tau$)')
+    if len(exps)==4:
+        for ax in [axs[2,0], axs[2,1]]:
+            ax.set_xticks(np.arange(len(titles)))
+            ax.set_xticklabels(titles)
+            ax.set_xlabel('Attribution')
+
+        #axs[0].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
+        #axs[1].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
+    fig.text(0.06,0.5,'Percentage of tracer at pole after 30 sols ($c_{{pole}_{30}}/c_{{pole}_0}$, %)',
+                ha='center',va='center',rotation='vertical',fontsize='large')
+
+    
+
+    #cb = fig.colorbar(sm, ax = axs, ticks = np.arange(len(tinds)+1)+1/2, boundaries = np.arange(len(tinds)+1))
+    #cb.ax.set_yticklabels(ls)
+    #cb.set_label('Initialization L$_s$')
+
+
+    if method == 'level':
+        method=method+str(level)
+    if method == 'int':
+        method=method+str(level[0])+'-'+str(level[1])
+    
+    #axs[0].legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
+    #             borderaxespad=0, fontsize='large')
+    #axs[1].legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
+    #             borderaxespad=0, fontsize='large')
+
+    fig.savefig(figpath + \
+            '%s_%s_%s_%03d-%03d_%i.%s' % (tname, hem, method, tinds[0], tinds[-1],ylim,ext),
+            bbox_inches='tight', dpi=300)
+    
+
 #%%
 if __name__ == "__main__":
     tind = 60
@@ -860,9 +1031,16 @@ if __name__ == "__main__":
     ylim = 75
 
     tinds = [60,90,120,150]
-    plot_multiple_times_all(
+    savedata = False
+    if savedata:
+        plot_multiple_times_all(
         level=300,
         ylim=ylim, tinds = tinds,ext='pdf',
-    )
+        )
+    else:
+        plot_multiple_times_all_from_data(
+        level=300,
+        ylim=ylim, tinds = tinds,ext='pdf',
+        )
 
 # %%
