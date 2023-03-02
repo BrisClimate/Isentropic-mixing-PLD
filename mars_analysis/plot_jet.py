@@ -4,11 +4,10 @@ import numpy as np
 import sys, os
 import math
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import get_exps
+from atmospy import open_files, get_exps, stereo_plot, \
+        Calculate_ZeroCrossing, calc_jet_lat, moving_average, new_cmap
 import string
 
 from cartopy import crs as ccrs
@@ -20,9 +19,9 @@ import matplotlib.path as mpath
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-
+figpath = '/user/home/xz19136/Figures/mars_analysis/jet/'
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -82,10 +81,10 @@ def plot_jet_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                phi_n = funcs.moving_average(phi_n, smooth)
-                phi_s = funcs.moving_average(phi_s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time  = moving_average(ds.time, smooth)
+                phi_n = moving_average(phi_n, smooth)
+                phi_s = moving_average(phi_s, smooth)
+                ls    = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 ls = ds.mars_solar_long
@@ -144,7 +143,7 @@ def plot_jet_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/jet/' \
+    fig.savefig(figpath \
                 + 'jet_lat.%s' % ext, dpi=300,
                 bbox_inches='tight')
 
@@ -189,10 +188,10 @@ def plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
             #jet_s = get_jet_strength(ds.u50, phi_s)
 
             if smooth is not None:
-                time = funcs.moving_average(ds.time, smooth)
-                jet_n = funcs.moving_average(jet_n, smooth)
-                jet_s = funcs.moving_average(jet_s, smooth)
-                ls = funcs.moving_average(ds.mars_solar_long, smooth)
+                time  = moving_average(ds.time, smooth)
+                jet_n = moving_average(jet_n, smooth)
+                jet_s = moving_average(jet_s, smooth)
+                ls    = moving_average(ds.mars_solar_long, smooth)
             else:
                 time = ds.time
                 ls = ds.mars_solar_long
@@ -251,7 +250,7 @@ def plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/jet/' \
+    fig.savefig(figpath \
                 + 'jet_strength.%s' % ext, dpi=300,
                 bbox_inches='tight')
 
