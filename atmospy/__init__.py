@@ -10,7 +10,8 @@ from .analysis_functions import filestrings, \
                                 get_timeslice, nf, \
                                 calc_PV_max, \
                                 moving_average_2d, \
-                                get_init_sol
+                                get_init_sol, \
+                                open_files, get_exps
 from .tropd_exo import find_STJ_jets, \
                        TropD_Metric_Psi
 
