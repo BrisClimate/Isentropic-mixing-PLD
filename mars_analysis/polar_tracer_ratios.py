@@ -53,7 +53,7 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
             '25_gamma_0.093_cdod_clim_scenario_' + str(scal[j])
 
         
-        _, d = open_files(exp_name, isentropic, tname=tname)
+        _, d = open_files(path, exp_name, isentropic, tname=tname)
         print(exp_name)
                    
         
@@ -185,7 +185,7 @@ def plot_polar_conc_ratio(tname='test_tracer', isentropic=False, \
                 '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps[j], gamma[i])
 
             
-            _, d = open_files(exp_name, isentropic, tname=tname)
+            _, d = open_files(path, exp_name, isentropic, tname=tname)
             print(exp_name)
                        
             
@@ -345,7 +345,7 @@ def plot_multiple_times_dust(tname='test_tracer', isentropic=True, \
                 '25_gamma_0.093_cdod_clim_scenario_' + str(scal[j])
 
 
-                _, d = open_files(exp_name, isentropic, tname=tname)
+                _, d = open_files(path, exp_name, isentropic, tname=tname)
                 print(exp_name)
 
                 hem = hems[h]
@@ -501,7 +501,7 @@ def plot_multiple_times(tname='test_tracer', isentropic=True, \
                     '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps[j], gamma[i])
 
 
-                _, d = open_files(exp_name, isentropic, tname=tname)
+                _, d = open_files(path, exp_name, isentropic, tname=tname)
                 print(exp_name)
 
 
