@@ -4,9 +4,10 @@ import xarray as xr
 import numpy as np
 import sys, os
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
+from atmospy import stereo_plot, lait, calc_PV_max, new_cmap, \
+                    get_timeslice, nf
 
 import string
 
@@ -19,8 +20,9 @@ import matplotlib.path as mpath
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
+figpath = '/user/home/xz19136/Figures/mars_analysis/xsections/'
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -32,21 +34,12 @@ if plt.rcParams["text.usetex"]:
 else:
     fmt = '%r'
 
-def open_files(exps, keff=False):
-    if keff:
-        ds = xr.open_dataset(
-        	path + exps + '_keff_test_tracer.nc', decode_times = False,)
-    else:
-        ds = xr.open_dataset(
-        	path + exps + '_atmos.nc', decode_times = False,)
-    return ds
-
 
 def get_PV_lats(di, hem='nh'):
     '''
     Lait-scale PV and then return the latitude of maximum PV on given 
     pressure levels'''
-    laitPV = funcs.lait(di.PV,di.theta,theta0,kappa=kappa)
+    laitPV = lait(di.PV,di.theta,theta0,kappa=kappa)
 
     l = []
     for a in range(len(di.pfull)):
@@ -55,64 +48,14 @@ def get_PV_lats(di, hem='nh'):
         
             x = x.where(x != np.nan, drop = True)
             if hem == 'nh':
-                phi_PV, _ = funcs.calc_PV_max(x, x.lat)
+                phi_PV, _ = calc_PV_max(x, x.lat)
             else:
-                phi_PV, _ = funcs.calc_PV_max(-x, x.lat)                    
+                phi_PV, _ = calc_PV_max(-x, x.lat)                    
             l.append(phi_PV)
         except:
             l.append(np.nan)
 
     return l
-
-def get_exps(exps):
-    
-    exp_names = []
-    if exps == 'parameter':
-        titles = []
-        for i in gamma:
-            for j in eps:
-                titles.append('$\epsilon = %i$,\n$\gamma = %.3f$' %(j,i))
-                exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                    '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' %(j,i))
-        nrows = len(gamma)
-        ncols = len(eps)
-        
-
-    elif exps == 'attribution':
-        titles = ['Control', 'LH', 'D', 'LH+D', 'T', 'LH+T', 'D+T', 'LH+D+T']
-        for t in ['', '_mola_topo']:
-            for d in ['', '_cdod_clim_scenario_7.4e-05']:
-                for l in ['', '_lh']:
-                    exp_names.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
-        nrows = 2
-        ncols = 4
-
-    elif exps == 'dust':
-        titles = ['1/2', '1', '2', '4']
-        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4]:
-            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                    '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
-        nrows = 1
-        ncols = 4
-    elif exps == '0-ecc':
-        titles = []
-        for j in eps:
-            titles.append('$\epsilon = %i$' %(j))
-            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                    '%i_gamma_0.000_cdod_clim_scenario_7.4e-05' %(j))
-        nrows = 1
-        ncols = len(eps)
-    elif exps == 'curr-ecc':
-        titles = []
-        for j in eps:
-            titles.append('$\epsilon = %i$' %(j))
-            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                    '%i_gamma_0.093_cdod_clim_scenario_7.4e-05' %(j))
-        nrows = 1
-        ncols = len(eps)
-
-    
-    return exp_names, titles, nrows, ncols
 
 def plot_keff_cross_parameter(hem='nh', half=False, PVmax=True, mean=None, tind=101,ext='png'):
     eps = [10,15,20,25,30,35,40,45,50]
@@ -124,7 +67,7 @@ def plot_keff_cross_parameter(hem='nh', half=False, PVmax=True, mean=None, tind=
     
     lims = [0,4]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+    boundaries, cmap, norm = new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0.05, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -181,7 +124,7 @@ def plot_keff_cross_parameter(hem='nh', half=False, PVmax=True, mean=None, tind=
                 ytext=None
                 ax.set_yticklabels([])
 
-            tind, m = funcs.get_timeslice(tind, mean)            
+            tind, m = get_timeslice(tind, mean)            
 
             if hem == 'nh':
                 d  =  d.where( d.lat >= 0, drop = True)
@@ -211,7 +154,7 @@ def plot_keff_cross_parameter(hem='nh', half=False, PVmax=True, mean=None, tind=
 
             c0 = ax.contour(di.lat, di.pfull, di.ucomp.mean(dim=["lon"]).transpose(),
                     levels=[-50,0,50,100,150], colors='black',linewidths=1)
-            c0.levels = [funcs.nf(val) for val in c0.levels]
+            c0.levels = [nf(val) for val in c0.levels]
             ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
             if PVmax:
                 l = get_PV_lats(di.mean(dim=["lon"]), hem=hem)
@@ -230,7 +173,7 @@ def plot_keff_cross_parameter(hem='nh', half=False, PVmax=True, mean=None, tind=
         half = ''
     
     #fig.suptitle('Zonal mean cross-section of effective diffusivity, Ls = $%i^\circ$%s' % (ls, mean))
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/xsections/parameter_%s' %half + \
+    fig.savefig(figpath+'parameter_%s' %half + \
         'xsect_%s_%03d%s.%s' % (hem, tind, sols, ext),
             bbox_inches='tight')
 
@@ -243,7 +186,7 @@ def plot_keff_cross_attribution(hem='nh', PVmax=True, mean=None, tind=101,ext='p
     
     lims = [0,4]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+    boundaries, cmap, norm = new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -251,7 +194,7 @@ def plot_keff_cross_attribution(hem='nh', PVmax=True, mean=None, tind=101,ext='p
         ax.set_yscale('log')
         ax.set_ylim([5.5,0.01])
 
-    tind, m = funcs.get_timeslice(tind, mean)  
+    tind, m = get_timeslice(tind, mean)  
     d_keff = xr.open_dataset(
         path + 'mars_analysis/attribution_keff_test_tracer.nc', decode_times = False,)
 
@@ -336,7 +279,7 @@ def plot_keff_cross_attribution(hem='nh', PVmax=True, mean=None, tind=101,ext='p
 
         c0 = ax.contour(lat, pfull, di.ucomp.transpose(),
                 levels=[-50,0,50,100,150], colors='black',linewidths=1)
-        c0.levels = [funcs.nf(val) for val in c0.levels]
+        c0.levels = [nf(val) for val in c0.levels]
         ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
         if PVmax:
             l = get_PV_lats(di, hem=hem)
@@ -357,7 +300,7 @@ def plot_keff_cross_attribution(hem='nh', PVmax=True, mean=None, tind=101,ext='p
         label='normalized effective diffusivity', extend='max')
     
     #fig.suptitle('Zonal mean cross-section of effective diffusivity, Ls = $%i^\circ$%s' % (ls, mean))
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/xsections/attribution_xsect_' + \
+    fig.savefig(figpath+'attribution_xsect_' + \
             '%s_%03d%s.%s' % (hem, tind, sols,ext),
             bbox_inches='tight')
 
@@ -370,7 +313,7 @@ def plot_keff_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
     
     lims = [0,4]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+    boundaries, cmap, norm = new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -378,7 +321,7 @@ def plot_keff_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
         ax.set_yscale('log')
         ax.set_ylim([5.5,0.01])
 
-    tind, m = funcs.get_timeslice(tind, mean)  
+    tind, m = get_timeslice(tind, mean)  
     d_keff = xr.open_dataset(
         path + 'mars_analysis/dust_keff_test_tracer.nc', decode_times = False,)
 
@@ -450,7 +393,7 @@ def plot_keff_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
 
         c0 = ax.contour(lat, pfull, di.ucomp.transpose(),
                 levels=[-50,0,50,100,150], colors='black',linewidths=1)
-        c0.levels = [funcs.nf(val) for val in c0.levels]
+        c0.levels = [nf(val) for val in c0.levels]
         ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
         if PVmax:
             l = get_PV_lats(di, hem=hem)
@@ -471,7 +414,7 @@ def plot_keff_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
         label='normalized effective diffusivity', extend='max')
     
     #fig.suptitle('Zonal mean cross-section of effective diffusivity, Ls = $%i^\circ$%s' % (ls, mean), y=1.1)
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/xsections/dust_xsect_' + \
+    fig.savefig(figpath+'dust_xsect_' + \
             '%s_%03d%s.%s' % (hem, tind, sols,ext),
             bbox_inches='tight')
 
@@ -485,7 +428,7 @@ def plot_temp_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
         lims = [150,240]
     else:
         lims = [120,210]
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='both', i = 10, override=True, cols='RdBu_r')
+    boundaries, cmap, norm = new_cmap(lims, extend='both', i = 10, override=True, cols='RdBu_r')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -493,7 +436,7 @@ def plot_temp_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
         ax.set_yscale('log')
         ax.set_ylim([5.5,0.01])
 
-    tind, m = funcs.get_timeslice(tind, mean)  
+    tind, m = get_timeslice(tind, mean)  
     
     for i, ax in enumerate(fig.axes):
         exp_name = exp_names[i]
@@ -547,7 +490,7 @@ def plot_temp_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
 
         c0 = ax.contour(lat, pfull, di.ucomp.transpose(),
                 levels=[-50,0,50,100,150], colors='black',linewidths=1)
-        c0.levels = [funcs.nf(val) for val in c0.levels]
+        c0.levels = [nf(val) for val in c0.levels]
         ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
         if PVmax:
             l = get_PV_lats(di, hem=hem)
@@ -568,7 +511,7 @@ def plot_temp_cross_dust(hem='nh', PVmax=True, mean=None, tind=101,ext='png'):
         label='temperature (K)', extend='both')
     
     #fig.suptitle('Zonal mean cross-section of temperature, Ls = $%i^\circ$%s' % (ls, mean), y=1.1)
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/xsections/dust_temp_xsect_' + \
+    fig.savefig(figpath+'dust_temp_xsect_' + \
             '%s_%03d%s.%s' % (hem, tind, sols, ext),
             bbox_inches='tight')
 
