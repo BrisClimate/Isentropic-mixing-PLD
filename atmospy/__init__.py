@@ -13,14 +13,10 @@ from .analysis_functions import filestrings, \
                                 get_init_sol, \
                                 open_files, get_exps
 from .tropd_exo import find_STJ_jets, \
-                       TropD_Metric_Psi
+                       TropD_Metric_PSI
 
-from xcontour import Contour2D, \
-                     latitude_lengths_at, \
-                     add_latlon_metrics, \
-                     get_planet_parameters
 from .PVmodule import potential_temperature, \
                      potential_vorticity_baroclinic, \
-                     isent_interp,
+                     isent_interp
 
 __version__ = "0.0.1"

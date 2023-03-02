@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.append('../')
 
-from atmospy import Contour2D, latitude_lengths_at, add_latlon_metrics, get_planet_parameters
+import Contour2D, latitude_lengths_at, add_latlon_metrics, get_planet_parameters
 
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
