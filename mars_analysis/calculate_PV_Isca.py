@@ -3,10 +3,9 @@
 import xarray as xr
 import numpy as np
 import os, sys
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
-import analysis_functions as funcs
-import PVmodule as PV
-import tropd_exo as pyt
+
+sys.path.append('../')
+import atmospy
 
 from multiprocessing import Pool, cpu_count
 import windspharm.xarray as windx
@@ -45,10 +44,10 @@ def calculate_PV(d, **kwargs):
     rsphere = kwargs.pop('rsphere', 3.3962e6)    # mean planetary radius
     dim     = kwargs.pop(    'dim', 'pfull')
 
-    theta = PV.potential_temperature(
+    theta = atmospy.potential_temperature(
         d.pfull, d.temp, kappa=kappa, p0=p0,
     )
-    PV_isobaric = PV.potential_vorticity_baroclinic(
+    PV_isobaric = atmospy.potential_vorticity_baroclinic(
         d.ucomp, d.vcomp, theta, dim, omega=omega, g=g, rsphere=rsphere,
     )
     return theta, PV_isobaric
@@ -79,7 +78,7 @@ def interpolate_to_isentropic(d, **kwargs):
         d = d.transpose('time', 'pfull', 'lat', 'lon')
 
         pres, PV_i, grdSpv_i, u_i, v_i, tracer_i, grd_tr_i, \
-         = PV.isent_interp(
+         = atmospy.isent_interp(
             thetalevs, d.pfull, d.temp, d.PV,
             d.grdSpv, d.ucomp,
             d.vcomp, d.test_tracer,
@@ -108,7 +107,7 @@ def interpolate_to_isentropic(d, **kwargs):
     else: ## just simple way to choose between earth and mars for now
         d = d.transpose('pfull', 'latitude', 'longitude')
 
-        pres, PV_i, grdSpv_i, u_i, v_i = PV.isent_interp(
+        pres, PV_i, grdSpv_i, u_i, v_i = atmospy.isent_interp(
             thetalevs, d.pfull, d.temp, d.PV,
             d.grdSpv, d.ucomp,
             d.vcomp, axis = 0, p0=p0, kappa=kappa)
