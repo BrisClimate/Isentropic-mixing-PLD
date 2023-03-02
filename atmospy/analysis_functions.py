@@ -61,6 +61,23 @@ def duplicate_axis(ax, newpos):
     ax2.set_xlim(ax.get_xlim())
     
     return ax2
+  
+ def open_files(path, exp_name, isentropic=False, tname='test_tracer'):
+    
+    if not isentropic:
+        isent = ''
+    else:
+        isent = '_isentropic'
+    
+    if tname is not 'test_tracer':
+        tname = 'test_tracer'
+    ds = xr.open_dataset(
+        	path + exp_name + '/keff%s_%s.nc' % (isent, tname), decode_times = False,)
+
+    d = xr.open_dataset(
+        	path + exp_name + '/atmos%s.nc' % isent, decode_times = False,)
+    
+    return ds, d
 
 def xr_add_cyclic_point(da):
     """
