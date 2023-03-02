@@ -103,7 +103,7 @@ def get_exps(exps):
     
     return exp_names, titles, nrows, ncols
   
-def open_files(path + exp_name, isentropic=False, tname='test_tracer'):
+def open_files(path, exp_name, isentropic=False, tname='test_tracer'):
     
     if not isentropic:
         isent = ''
