@@ -19,7 +19,7 @@ import matplotlib.path as mpath
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-
+figpath = '/user/home/xz19136/Figures/mars_analysis/PV/'
 path = '/user/work/xz19136/Isca_data/'
 theta, center, radius, verts, circle = stereo_plot()
 theta0 = 200.
@@ -189,7 +189,7 @@ def plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/PV/' \
+    fig.savefig(figpath \
                 + 'PV_maxstrength.%s' %ext, dpi=300,
                 bbox_inches='tight')
 
@@ -289,7 +289,7 @@ def plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/PV/' \
+    fig.savefig(figpath \
                 + 'PV_maxlat.%s' %ext, dpi=300,
                 bbox_inches='tight')
 
