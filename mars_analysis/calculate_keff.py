@@ -4,16 +4,12 @@ import xarray as xr
 import numpy as np
 import os, sys
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
-#sys.path.append('../atmospy/xcontour/')
+sys.path.append('../')
+
 from xcontour import Contour2D, latitude_lengths_at, add_latlon_metrics, get_planet_parameters
 
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
-
-sys.path.append('/user/home/xz19136/Py_Scripts/Paper_scripts/')
-#import analysis_functions as funcs
-
 
 path     = '/user/work/xz19136/Isca_data/'
 
@@ -344,13 +340,7 @@ def plot_era5_keff_isentropic():
     axs.set_title('normalized effective diffusivity', fontsize=fontsize)
 
 if __name__ == "__main__":
-    #test_PV_plot()
-    #dset = xr.open_dataset('/user/work/xz19136/2010-01-01_PV_isentropic.nc')
-    #ds   = xr.open_dataset('/user/home/xz19136/Py_Scripts/mars_analysis/PV.nc')
-#
-    #
-    #
-#
+    
     eps = [10, 15, 20, 25, 30, 35, 40, 45, 50]
     gamma = [0.0,0.093]
     
@@ -369,43 +359,10 @@ if __name__ == "__main__":
     for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
 
+    
     for i in exps:
-        calculate_isentropic(i)
-
-    #with Pool(processes=7) as pool:
-    #    pool.map(calculate_isentropic, exps)
-        #pool.map(iterate_over_isentropic, eps)
-    #fig, axs = plt.subplots(nrows=1, ncols=3,figsize=(14,5))
-    #m=axs[0].contourf(ds.latitude,ds.level,ds.pv.mean(dim="longitude"), extend='both')
-    #fig.colorbar(m, orientation='vertical', label='',ax=axs[0])
-    #m=axs[1].contourf(dset.latitude,dset.level,dset.PV.mean(dim="longitude"), extend='both')
-    #fig.colorbar(m, orientation='vertical', label='',ax=axs[1])
-    #m=axs[2].contourf(dset.latitude,dset.level,
-    #    dset.PV.mean(dim="longitude")-ds.pv.mean(dim="longitude"),
-    #    extend='both')
-    #fig.colorbar(m, orientation='vertical', label='',ax=axs[2])
-    #calculate_mars_keff()
-    
-    #plot_era5_keff()
-    #keff_era5_isentropic()
-    #plot_era5_keff_isentropic()
-    #for i in eps:
-    #    iterate_over_all(i)
-    #for i in eps:
-    #    iterate_over_isentropic(i)
-    #    iterate_over_all(i)
-    #plot_era5_keff()
-    #plot_mars_keff('tracer_soc_mars_mola_topo_lh_eps_' +\
-    #            '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (30, 0.09))
-    #keff_era5_isentropic()
-    #plot_era5_keff_isentropic()
-    #test_PV_plot()
-    #with Pool(processes=len(eps)) as pool:
-    #    pool.map(iterate_over_all, eps)
-    #    pool.map(iterate_over_isentropic, eps)
+        iterate_over_all(i)
         
-                
-    
-
-    
-# %%
+        calculate_isentropic(i)
+        
+        iterate_over_isentropic(i)
