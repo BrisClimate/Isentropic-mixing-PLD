@@ -4,11 +4,10 @@ import numpy as np
 import sys, os
 import math
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
+sys.path.append('../')
 
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import get_exps
+import atmospy
+
 from plot_HC import get_HC_edge
 from plot_PV import get_PV_lats_isentropic
 import string
@@ -24,7 +23,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = atmospy.stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -45,7 +44,7 @@ def get_lats_all(exps=['curr-ecc','0-ecc','dust'],level=300):
     
     for i in range(len(exps)):
         exp = exps[i]
-        exp_names, titles, _, _ = get_exps(exp)
+        exp_names, titles, _, _ = atmospy.get_exps(exp)
         a_s = np.zeros((len(exp_names),2,4))
         
         
@@ -105,12 +104,12 @@ def get_lats_all(exps=['curr-ecc','0-ecc','dust'],level=300):
 def plot_summary_of_lats(lats, exps = ['curr-ecc','0-ecc','dust']):
     fig, axs = plt.subplots(nrows=len(lats),ncols=2, figsize = (15,3.5*len(lats)),dpi=300)
     
-    boundaries, cmap, norm = funcs.new_cmap(
+    boundaries, cmap, norm = atmospy.new_cmap(
         [30,90], extend='neither',override=True, i=40)
         
     for i in range(len(exps)):
         lat = lats[i]
-        exp_names, titles, _, _ = get_exps(exps[i])
+        exp_names, titles, _, _ = atmospy.get_exps(exps[i])
 
         if exps[i] == 'curr-ecc':
             exp = '$\gamma = 0.093$'
@@ -183,7 +182,7 @@ def plot_summary_of_lats_line(lats, exps = ['curr-ecc','0-ecc','dust'],level=300
 
     for i in range(len(exps)):
         lat = lats[i]
-        exp_names, _, _, _ = get_exps(exps[i])
+        exp_names, _, _, _ = atmospy.get_exps(exps[i])
 
         if exps[i] == 'curr-ecc':
             xticklabs = np.arange(10,55,5)
@@ -420,7 +419,5 @@ if __name__ == "__main__":
     level = 300
     lats = get_lats_all(exps=exps,level=level)
 
-#%%
-a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
-plot_rate_of_change(a,std,level=level,ext='pdf')
-# %%
+    a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
+    plot_rate_of_change(a,std,level=level,ext='pdf')
