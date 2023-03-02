@@ -52,14 +52,74 @@ rsphere = 3.3962e6
 
 import tropd_exo as pyt
 
-def open_files(path, exps, keff=False):
-    if keff:
-        ds = xr.open_dataset(
-        	path + exps + '_keff_test_tracer.nc', decode_times = False,)
+
+def get_exps(exps):
+    
+    exp_names = []
+    if exps == 'parameter':
+        titles = []
+        for i in gamma:
+            for j in eps:
+                titles.append('$\epsilon = %i$,\n$\gamma = %.3f$' %(j,i))
+                exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' %(j,i))
+        nrows = len(gamma)
+        ncols = len(eps)
+        
+
+    elif exps == 'attribution':
+        titles = ['Control', 'LH', 'D', 'LH+D', 'T', 'LH+T', 'D+T', 'LH+D+T']
+        for t in ['', '_mola_topo']:
+            for d in ['', '_cdod_clim_scenario_7.4e-05']:
+                for l in ['', '_lh']:
+                    exp_names.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
+        nrows = 2
+        ncols = 4
+
+    elif exps == 'dust':
+        titles = ['1/2', '1', '2', '4']
+        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4]:
+            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
+        nrows = 1
+        ncols = 4
+    elif exps == '0-ecc':
+        titles = []
+        for j in eps:
+            titles.append('$\epsilon = %i$' %(j))
+            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '%i_gamma_0.000_cdod_clim_scenario_7.4e-05' %(j))
+        nrows = 1
+        ncols = len(eps)
+    elif exps == 'curr-ecc':
+        titles = []
+        for j in eps:
+            titles.append('$\epsilon = %i$' %(j))
+            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '%i_gamma_0.093_cdod_clim_scenario_7.4e-05' %(j))
+        nrows = 1
+        ncols = len(eps)
+
+    
+    return exp_names, titles, nrows, ncols
+  
+def open_files(path + exp_name, isentropic=False, tname='test_tracer'):
+    
+    if not isentropic:
+        isent = ''
     else:
-        ds = xr.open_dataset(
-        	path + exps + '_atmos.nc', decode_times = False,)
-    return ds
+        isent = '_isentropic'
+    
+    if tname is not 'test_tracer':
+        tname = 'test_tracer'
+    ds = xr.open_dataset(
+        	path + exp_name + '/keff%s_%s.nc' % (isent, tname), decode_times = False,)
+
+    d = xr.open_dataset(
+        	path + exp_name + '/atmos%s.nc' % isent, decode_times = False,)
+    
+    return ds, d
+
 
 def duplicate_axis(ax, newpos):
     ax2 = ax.twiny()
