@@ -4,11 +4,8 @@ import numpy as np
 import sys, os
 import math
 
-sys.path.append('/user/home/xz19136/Py_Scripts/atmospy/')
-
-import analysis_functions as funcs
-from test_tracer_plot import open_files
-from plot_keff_cross_sections import (get_exps)
+sys.path.append('../')
+import atmospy
 import string
 
 from cartopy import crs as ccrs
@@ -20,9 +17,9 @@ import matplotlib.path as mpath
 
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-
+figpath = '/user/home/xz19136/Figures/mars_analysis/keff/'
 path = '/user/work/xz19136/Isca_data/'
-theta, center, radius, verts, circle = funcs.stereo_plot()
+theta, center, radius, verts, circle = atmospy.stereo_plot()
 theta0 = 200.
 kappa = 1/4.0
 
@@ -59,9 +56,9 @@ def get_PV_lats(PV, hem='nh'):
         
         x = x.where(x != np.nan, drop = True)
         if hem == 'nh':
-            phi_PV, _ = funcs.calc_jet_lat(x, x.lat)
+            phi_PV, _ = atmospy.calc_jet_lat(x, x.lat)
         else:
-            phi_PV, _ = funcs.calc_jet_lat(-x, x.lat)                    
+            phi_PV, _ = atmospy.calc_jet_lat(-x, x.lat)                    
         l.append(phi_PV)
         #except:
         #    l.append(np.nan)
@@ -77,7 +74,7 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
     within the vortex.
     '''
     tind = tind % 360
-    tind, m = funcs.get_timeslice(tind, mean)  
+    tind, m = atmospy.get_timeslice(tind, mean)  
     fig, axs = plt.subplots(nrows=len(exps),ncols=2, figsize = (15,4*len(exps)),dpi=300)
 
     ds = xr.open_dataset(path+'mars_analysis/parameter_keff_test_tracer_isentropic.nc',
@@ -98,7 +95,7 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
     
     for i in range(len(exps)):
         exp = exps[i]
-        exp_names, titles, _, _ = get_exps(exp)
+        exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         colors = plt.cm.viridis(np.linspace(0,1,int(len(exp_names)-1)))
         if exp == 'curr-ecc':
@@ -202,7 +199,7 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
         y=0.95,
         fontsize='x-large')
 
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/keff/' \
+    fig.savefig(figpath \
                 + 'keff_vs_lat_%iK_%03d%s.png' % (level, tind, sols), dpi=300,
                 bbox_inches='tight')
 
@@ -215,7 +212,7 @@ def plot_keff_lat_PV(exps=['curr-ecc','0-ecc','dust'], \
     within the vortex.
     '''
     tind = tind % 360
-    tind, m = funcs.get_timeslice(tind, mean)  
+    tind, m = atmospy.get_timeslice(tind, mean)  
     fig1, axs1 = plt.subplots(nrows=len(exps),ncols=3, figsize = (20,4*len(exps)),dpi=300)
     fig2, axs2 = plt.subplots(nrows=len(exps),ncols=3, figsize = (20,4*len(exps)),dpi=300)
 
@@ -431,10 +428,10 @@ def plot_keff_lat_PV(exps=['curr-ecc','0-ecc','dust'], \
     #    y=0.95,
     #    fontsize='x-large')
 
-    fig1.savefig('/user/home/xz19136/Figures/mars_analysis/keff/' \
+    fig1.savefig(figpath \
                 + 'keff_PV_vs_lat_%iK_%03d%s_nh.%s' % (level, tind, sols, ext), dpi=300,
                 bbox_inches='tight')
-    fig2.savefig('/user/home/xz19136/Figures/mars_analysis/keff/' \
+    fig2.savefig(figpath \
                 + 'keff_PV_vs_lat_%iK_%03d%s_sh.%s' % (level, tind, sols, ext), dpi=300,
                 bbox_inches='tight')
 
@@ -445,7 +442,7 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
     
     lims = [0,4]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+    boundaries, cmap, norm = atmospy.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -487,10 +484,10 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
         new = dis.new.values
         if smooth is not None:
             
-            time  = funcs.moving_average(   dis.time, smooth)
-            dis   = funcs.moving_average_2d(     dis.transpose(), smooth)
-            ucomp = funcs.moving_average_2d(di.ucomp.transpose(), smooth)
-            #PV    = funcs.moving_average_2d(   di.PV.transpose(), smooth)
+            time  = atmospy.moving_average(   dis.time, smooth)
+            dis   = atmospy.moving_average_2d(     dis.transpose(), smooth)
+            ucomp = atmospy.moving_average_2d(di.ucomp.transpose(), smooth)
+            #PV    = atmospy.moving_average_2d(   di.PV.transpose(), smooth)
         else:
             time = dis.time
             dis = dis.transpose()
@@ -505,15 +502,15 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
         if winds:
             c0 = ax.contour(time, lat, ucomp,
                 levels=[-50,0,50,100,150], colors='black',linewidths=1)
-            c0.levels = [funcs.nf(val) for val in c0.levels]
+            c0.levels = [atmospy.nf(val) for val in c0.levels]
             ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
         if PVmax:
             PV = di.PV
             l = get_PV_lats(PV.where(PV.lat>20,drop=True).where(
                 di.mars_solar_long>180,drop=True), hem='nh')
             if smooth is not None:
-                l  = funcs.moving_average(l, smooth)
-                time = funcs.moving_average(
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
                     di.time.where(di.mars_solar_long>180,drop=True), smooth)
             else:
                 time = di.time.where(di.mars_solar_long>180,drop=True)
@@ -522,8 +519,8 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
             l = get_PV_lats(PV.where(PV.lat<-20,drop=True).where(
                 di.mars_solar_long<180,drop=True), hem='sh')
             if smooth is not None:
-                l  = funcs.moving_average(l, smooth)
-                time = funcs.moving_average(
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
                     di.time.where(di.mars_solar_long<180,drop=True), smooth)
             else:
                 time = di.time.where(di.mars_solar_long<180,drop=True)
@@ -541,7 +538,7 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
         ax = axs, pad = 0.01,
         label='normalized effective diffusivity', extend='max')
     
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/keff/dust_hov_' + \
+    fig.savefig(figpath+'dust_hov_' + \
             '%iK.%s' % (level, ext),
             bbox_inches='tight')
 
@@ -557,7 +554,7 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
         
     lims = [0,4]
 
-    boundaries, cmap, norm = funcs.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+    boundaries, cmap, norm = atmospy.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
 
     for i, ax in enumerate(fig.axes):
         ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
@@ -614,10 +611,10 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
             new = dis.new.values
             if smooth is not None:
 
-                time  = funcs.moving_average(   dis.time, smooth)
-                dis   = funcs.moving_average_2d(     dis.transpose(), smooth)
-                ucomp = funcs.moving_average_2d(di.ucomp.transpose(), smooth)
-                #PV    = funcs.moving_average_2d(   di.PV.transpose(), smooth)
+                time  = atmospy.moving_average(   dis.time, smooth)
+                dis   = atmospy.moving_average_2d(     dis.transpose(), smooth)
+                ucomp = atmospy.moving_average_2d(di.ucomp.transpose(), smooth)
+                #PV   = atmospy.moving_average_2d(   di.PV.transpose(), smooth)
             else:
                 time = dis.time
                 dis = dis.transpose()
@@ -632,7 +629,7 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
             if winds:
                 c0 = ax.contour(time, lat, ucomp,
                     levels=[-50,0,50,100,150], colors='black',linewidths=1)
-                c0.levels = [funcs.nf(val) for val in c0.levels]
+                c0.levels = [atmospy.nf(val) for val in c0.levels]
                 ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
             if PVmax:
                 PV = di.PV
@@ -641,8 +638,8 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
                 l = get_PV_lats(PV.where(PV.lat>20,drop=True).where(
                     cond1,drop=True), hem='nh')
                 if smooth is not None:
-                    l  = funcs.moving_average(l, smooth)
-                    time = funcs.moving_average(
+                    l  = atmospy.moving_average(l, smooth)
+                    time = atmospy.moving_average(
                         di.time.where(cond1,drop=True), smooth)
                 else:
                     time = di.time.where(cond1,drop=True)
@@ -653,8 +650,8 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
                 l = get_PV_lats(PV.where(PV.lat<-20,drop=True).where(
                     cond2,drop=True), hem='sh')
                 if smooth is not None:
-                    l  = funcs.moving_average(l, smooth)
-                    time = funcs.moving_average(
+                    l  = atmospy.moving_average(l, smooth)
+                    time = atmospy.moving_average(
                         di.time.where(cond2,drop=True), smooth)
                 else:
                     time = di.time.where(cond2,drop=True)
@@ -678,7 +675,7 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
     else:
         half='_all'
     
-    fig.savefig('/user/home/xz19136/Figures/mars_analysis/keff/parameter_hov_' + \
+    fig.savefig(figpath+'parameter_hov_' + \
             '%iK%s.%s' % (level,half,ext),
             bbox_inches='tight')
 
