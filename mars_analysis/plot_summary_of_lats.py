@@ -98,6 +98,12 @@ def get_lats_all(exps=['curr-ecc','0-ecc','dust'],level=300):
             a_s[j,0,3] = np.nanmean(np.log(keff_n))
             a_s[j,1,3] = np.nanmean(np.log(keff_s))
 
+            dat = xr.DataArray(a_s,
+                coords = {'exp_name':exp_names, 'hem':[0,1], 'phi':['HC','u','PV','keff']},
+                dims = ['exp_name','hem','phi'],
+                )
+            dat.to_netcdf(path+'mars_analysis/summary_of_lats/%s_summary_of_lats.nc' % exp)
+            
         lats.append(a_s)
     return lats
 
@@ -417,7 +423,20 @@ if __name__ == "__main__":
     gamma = [0.093,0.00]
     exps = ['curr-ecc','0-ecc','dust']
     level = 300
-    lats = get_lats_all(exps=exps,level=level)
+    savedata = False
+    
+    if savedata:
+        lats = get_lats_all(exps=exps,level=level)
 
-    a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
-    plot_rate_of_change(a,std,level=level,ext='pdf')
+        a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
+        plot_rate_of_change(a,std,level=level,ext='pdf')
+    else:
+        lats = []
+        for exp in exps:
+            d = xr.open_dataset(path+'mars_analysis/summary_of_lats/%s_summary_of_lats.nc' % exp)
+            d = d.to_array().squeeze()
+            lats.append(d)
+        a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
+        plot_rate_of_change(a,std,level=level,ext='pdf')
+
+# %%

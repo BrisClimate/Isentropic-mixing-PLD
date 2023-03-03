@@ -47,7 +47,7 @@ def get_jet_strength(di, lats):
 
 
 def plot_jet_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None,level=300,ext='png'):
+    smooth=None,level=300,ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -74,20 +74,39 @@ def plot_jet_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
             exp_name = exp_names[j]
             print(exp_name)
             
-            ds = xr.open_dataset(path+exp_name+'/EDJ.nc', decode_times=False)
+            if savedata:
+                ds = xr.open_dataset(path+exp_name+'/EDJ.nc', decode_times=False)
+
+                phi_n = ds.phi_n.squeeze()
+                phi_s = ds.phi_s.squeeze()
+
+
+                if smooth is not None:
+                    time  = moving_average(ds.time, smooth)
+                    phi_n = moving_average(phi_n, smooth)
+                    phi_s = moving_average(phi_s, smooth)
+                    ls    = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    ls = ds.mars_solar_long
             
-            phi_n = ds.phi_n.squeeze()
-            phi_s = ds.phi_s.squeeze()
-
-
-            if smooth is not None:
-                time  = moving_average(ds.time, smooth)
-                phi_n = moving_average(phi_n, smooth)
-                phi_s = moving_average(phi_s, smooth)
-                ls    = moving_average(ds.mars_solar_long, smooth)
+                ds = xr.Dataset(data_vars=dict(
+                        jet_n = (["time"], phi_n),
+                        jet_s = (["time"], phi_s),
+                        ls   = (["time"], ls),
+                    ),
+                    coords = dict(
+                        time = time,
+                    ),
+                )
+                ds.to_netcdf(path+'mars_analysis/jet_lats/%s.nc' % exp_name)
             else:
+                ds = xr.open_dataset(path+'mars_analysis/jet_lats/%s.nc' % exp_name,
+                                     decode_times=False)
+                phi_n = ds.jet_n
+                phi_s = ds.jet_s
+                ls = ds.ls
                 time = ds.time
-                ls = ds.mars_solar_long
 
             # if you want to do a sanity check include this
             #if exp_name == exp_names[0]:
@@ -149,7 +168,7 @@ def plot_jet_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 def plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None,level=300,ext='png'):
+    smooth=None,level=300,ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -176,25 +195,39 @@ def plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
             exp_name = exp_names[j]
             print(exp_name)
             
-            ds = xr.open_dataset(path+exp_name+'/EDJ.nc', decode_times=False)
+            if savedata:
+                ds = xr.open_dataset(path+exp_name+'/EDJ.nc', decode_times=False)
 
-            #phi_n = ds.jets_n.squeeze()
-            #phi_s = ds.jets_s.squeeze()
-            jet_n = ds.jet_n.squeeze()
-            jet_s = ds.jet_s.squeeze()
+                jet_n = ds.jet_n.squeeze()
+                jet_s = ds.jet_s.squeeze()
 
+                if smooth is not None:
+                    time  = moving_average(ds.time, smooth)
+                    jet_n = moving_average(jet_n, smooth)
+                    jet_s = moving_average(jet_s, smooth)
+                    ls    = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    ls = ds.mars_solar_long
 
-            #jet_n = get_jet_strength(ds.u50, phi_n)
-            #jet_s = get_jet_strength(ds.u50, phi_s)
-
-            if smooth is not None:
-                time  = moving_average(ds.time, smooth)
-                jet_n = moving_average(jet_n, smooth)
-                jet_s = moving_average(jet_s, smooth)
-                ls    = moving_average(ds.mars_solar_long, smooth)
+                ds = xr.Dataset(data_vars=dict(
+                        jet_n = (["time"], jet_n),
+                        jet_s = (["time"], jet_s),
+                        ls   = (["time"], ls),
+                    ),
+                    coords = dict(
+                        time = time,
+                    ),
+                )
+                ds.to_netcdf(path+'mars_analysis/jet_strength/%s.nc' % exp_name)
             else:
+                ds = xr.open_dataset(path+'mars_analysis/jet_strength/%s.nc' % exp_name,
+                                     decode_times=False)
+                jet_n = ds.jet_n
+                jet_s = ds.jet_s
+                ls = ds.ls
                 time = ds.time
-                ls = ds.mars_solar_long
+
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
                 or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
                 col = 'k'
@@ -257,7 +290,10 @@ def plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
 if __name__ == "__main__":
     eps = np.arange(10,55,5)
     gamma = [0.093,0.00]
-    plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
-    plot_jet_lat_evolution(     exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
+    savedata=False
+    plot_jet_strength_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,
+                    ext='pdf', savedata=savedata)
+    plot_jet_lat_evolution(     exps=['curr-ecc','0-ecc','dust'],smooth=10,
+                    ext='pdf', savedata=savedata)
 
 # %%

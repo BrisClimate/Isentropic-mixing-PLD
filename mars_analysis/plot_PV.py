@@ -6,8 +6,8 @@ import math
 
 sys.path.append('../')
 
-from atmospy import open_files, get_exps, stereo_plot, lait, \
-        Calculate_ZeroCrossing, calc_jet_lat, moving_average, new_cmap
+from atmospy import get_exps, stereo_plot, lait, \
+        calc_jet_lat, moving_average
 import string
 
 from cartopy import crs as ccrs
@@ -90,7 +90,7 @@ def get_PV_max_isentropic(di, hem='nh'):
 
 
 def plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None,level=300,ext='png'):
+    smooth=None,level=300,ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -116,26 +116,48 @@ def plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
             exp_name = exp_names[j]
             print(exp_name)
+
+            if savedata:
             
-            ds = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
+                ds = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
 
-            ds = ds[["PV","mars_solar_long"]].sel(level=level,method="nearest")
-            ds = ds.mean(dim="lon")
+                ds = ds[["PV","mars_solar_long"]].sel(level=level,method="nearest")
+                ds = ds.mean(dim="lon")
 
-            _, PV_max_n = get_PV_lats_isentropic(ds.where(ds.lat > 0, drop=True),hem='nh')
-            _, PV_max_s = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
+                _, PV_max_n = get_PV_lats_isentropic(ds.where(ds.lat > 0, drop=True),hem='nh')
+                _, PV_max_s = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
 
-            if smooth is not None:
-                time     = moving_average(ds.time, smooth)
-                PV_max_n = moving_average(PV_max_n, smooth)
-                PV_max_s = moving_average(PV_max_s, smooth)
-                ls       = moving_average(ds.mars_solar_long, smooth)
+                if smooth is not None:
+                    time     = moving_average(ds.time, smooth)
+                    PV_max_n = moving_average(PV_max_n, smooth)
+                    PV_max_s = moving_average(PV_max_s, smooth)
+                    ls       = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    ls = ds.mars_solar_long
+
+                PV_max_n =  PV_max_n*10**4
+                PV_max_s = -PV_max_s*10**4
+
+                ds = xr.Dataset(data_vars=dict(
+                    PV_n = (["time"], PV_max_n),
+                    PV_s = (["time"], PV_max_s),
+                    ls   = (["time"], ls),
+                ),
+                coords = dict(
+                    time = time,
+                ),
+                )
+                ds.to_netcdf(path+'mars_analysis/PV_strength/%s.nc' % exp_name)
+
             else:
+                ds = xr.open_dataset(path+'mars_analysis/PV_strength/%s.nc' % exp_name,
+                                     decode_times=False)
+                PV_max_n = ds.PV_n
+                PV_max_s = ds.PV_s
+                ls = ds.ls
                 time = ds.time
-                ls = ds.mars_solar_long
 
-            PV_max_n =  PV_max_n*10**4
-            PV_max_s = -PV_max_s*10**4
 
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
                 or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
@@ -195,7 +217,7 @@ def plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 def plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None,level=300,ext='png'):
+    smooth=None,level=300,ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -222,22 +244,43 @@ def plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
             exp_name = exp_names[j]
             print(exp_name)
             
-            ds = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
+            if savedata:
+                ds = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
 
-            ds = ds[["PV","mars_solar_long"]].sel(level=level,method="nearest")
-            ds = ds.mean(dim="lon")
+                ds = ds[["PV","mars_solar_long"]].sel(level=level,method="nearest")
+                ds = ds.mean(dim="lon")
 
-            phiPV_n, _ = get_PV_lats_isentropic(ds.where(ds.lat > 0, drop=True),hem='nh')
-            phiPV_s, _ = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
+                phiPV_n, _ = get_PV_lats_isentropic(ds.where(ds.lat > 0, drop=True),hem='nh')
+                phiPV_s, _ = get_PV_lats_isentropic(ds.where(ds.lat < 0, drop=True),hem='sh')
 
-            if smooth is not None:
-                time    = moving_average(ds.time, smooth)
-                phiPV_n = moving_average(phiPV_n, smooth)
-                phiPV_s = moving_average(phiPV_s, smooth)
-                ls      = moving_average(ds.mars_solar_long, smooth)
+                if smooth is not None:
+                    time    = moving_average(ds.time, smooth)
+                    phiPV_n = moving_average(phiPV_n, smooth)
+                    phiPV_s = moving_average(phiPV_s, smooth)
+                    ls      = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    ls = ds.mars_solar_long
+
+                ds = xr.Dataset(data_vars=dict(
+                    PV_n = (["time"], phiPV_n),
+                    PV_s = (["time"], phiPV_s),
+                    ls   = (["time"], ls),
+                ),
+                coords = dict(
+                    time = time,
+                ),
+                )
+                ds.to_netcdf(path+'mars_analysis/PV_lats/%s.nc' % exp_name)
+
             else:
+                ds = xr.open_dataset(path+'mars_analysis/PV_lats/%s.nc' % exp_name,
+                                     decode_times=False)
+                phiPV_n = ds.PV_n
+                phiPV_s = ds.PV_s
+                ls = ds.ls
                 time = ds.time
-                ls = ds.mars_solar_long
+
             
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
                 or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
@@ -297,6 +340,7 @@ def plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'], \
 if __name__ == "__main__":
     eps = np.arange(10,55,5)
     gamma = [0.093,0.00]
-    plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
-    plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
+    savedata = False
+    plot_PV_lat_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf',savedata=savedata)
+    plot_PV_max_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf',savedata=savedata)
 # %%
