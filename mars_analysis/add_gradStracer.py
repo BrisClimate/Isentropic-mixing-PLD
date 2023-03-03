@@ -236,6 +236,8 @@ if __name__ == "__main__":
 
     
     for i in exps:
+      iterate_over_all(i)
+      interp_all(i)
       interp_attrs(i,)
 
 # %%
