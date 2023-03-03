@@ -53,7 +53,7 @@ def concat_parameter(isentropic = False):
         ise = '_isentropic'
     else:
         ise = ''
-    g_keff.to_netcdf(path+'mars_analysis/parameter_keff_test_tracer%s.nc' %ise, mode='w')
+    g_keff.to_netcdf(path+'mars_analysis/keffs/parameter_keff_test_tracer%s.nc' %ise, mode='w')
 
 def concat_attribution(isentropic = False):
     c = []
@@ -91,7 +91,7 @@ def concat_attribution(isentropic = False):
         ise = '_isentropic'
     else:
         ise = ''
-    c.to_netcdf(path+'mars_analysis/attribution_keff_test_tracer%s.nc' %ise, mode='w')
+    c.to_netcdf(path+'mars_analysis/keffs/attribution_keff_test_tracer%s.nc' %ise, mode='w')
 
 def concat_dust(isentropic = False):
     
@@ -110,14 +110,13 @@ def concat_dust(isentropic = False):
         ise = '_isentropic'
     else:
         ise = ''
-    a.to_netcdf(path+'mars_analysis/dust_keff_test_tracer%s.nc' %ise, mode='w')
+    a.to_netcdf(path+'mars_analysis/keffs/dust_keff_test_tracer%s.nc' %ise, mode='w')
 
 if __name__ == "__main__":
-    isentropic = True
+    isentropic = False
     concat_dust(isentropic=isentropic)
-    
     concat_parameter(isentropic=isentropic)
-    concat_attribution(isentropic=isentropic)
+    #concat_attribution(isentropic=isentropic)
 
             #for t in ['test_tracer']:#, 'PV']:
 # %%

@@ -237,3 +237,5 @@ if __name__ == "__main__":
     
     for i in exps:
       interp_attrs(i,)
+
+# %%

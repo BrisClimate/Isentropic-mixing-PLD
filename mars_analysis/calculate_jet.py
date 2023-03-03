@@ -224,10 +224,7 @@ if __name__ == "__main__":
     for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
 
-    #for i in exps:
-    #    calculate_psi()
-
-    with Pool(processes=7) as pool:
-        pool.map(find_single_jet, exps)
+    for i in exps:
+        find_single_jet(i)
                     
 # %%

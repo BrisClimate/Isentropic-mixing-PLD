@@ -74,7 +74,7 @@ def get_HC_edge(d):
 
 
 def plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None,ext='png'):
+    smooth=None,ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -101,22 +101,42 @@ def plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'], \
             exp_name = exp_names[j]
             print(exp_name)
             
-            ds = xr.open_dataset(path+exp_name+'/psi.nc', decode_times=False)
-            #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0n])/len(ds.psi_0n)))
-            #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0s])/len(ds.psi_0s)))
+            if savedata:
+                ds = xr.open_dataset(path+exp_name+'/psi.nc', decode_times=False)
+                #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0n])/len(ds.psi_0n)))
+                #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0s])/len(ds.psi_0s)))
 
-            psi0n = get_HC_edge(ds.where(ds.lat>0,drop=True))
-            psi0s = get_HC_edge(ds.where(ds.lat<0,drop=True).sortby('lat',ascending=False))
-            if smooth is not None:
-                time  = moving_average(ds.time, smooth)
-                psi0n = moving_average(psi0n, smooth)
-                psi0s = moving_average(psi0s, smooth)
-                ls    = moving_average(ds.mars_solar_long, smooth)
+                psi0n = get_HC_edge(ds.where(ds.lat>0,drop=True))
+                psi0s = get_HC_edge(ds.where(ds.lat<0,drop=True).sortby('lat',ascending=False))
+                if smooth is not None:
+                    time  = moving_average(ds.time, smooth)
+                    psi0n = moving_average(psi0n, smooth)
+                    psi0s = moving_average(psi0s, smooth)
+                    ls    = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    psi0n = psi0n
+                    psi0s = psi0s
+                    ls = ds.mars_solar_long
+
+                ds = xr.Dataset(data_vars=dict(
+                        psi_n = (["time"], psi0n),
+                        psi_s = (["time"], psi0s),
+                        ls   = (["time"], ls),
+                    ),
+                    coords = dict(
+                        time = time,
+                    ),
+                )
+                ds.to_netcdf(path+'mars_analysis/HC_lats/%s.nc' % exp_name)
             else:
+                ds = xr.open_dataset(path+'mars_analysis/HC_lats/%s.nc' % exp_name,
+                                     decode_times=False)
+                psi0n = ds.psi_n
+                psi0s = ds.psi_s
+                ls = ds.ls
                 time = ds.time
-                psi0n = psi0n
-                psi0s = psi0s
-                ls = ds.mars_solar_long
+
 
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
                 or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
@@ -174,7 +194,7 @@ def plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'], \
 
 
 def plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
-    smooth=None, ext='png'):
+    smooth=None, ext='png',savedata=False):
     '''
     Plot effective diffusivity evolution at a given point,
     in order to understand strength of the transport barrier and mixing
@@ -202,25 +222,44 @@ def plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'], \
             exp_name = exp_names[j]
             print(exp_name)
             
-            ds = xr.open_dataset(path+exp_name+'/psi.nc', decode_times=False)
-            #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0n])/len(ds.psi_0n)))
-            #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0s])/len(ds.psi_0s)))
-            ds = ds.transpose('lat','pfull','time')
-            psi_0n = get_HC_strength(ds.where(ds.lat>0,drop=True))
-            psi0n = [i/10**8 for i in psi_0n]
-            psi_0s = get_HC_strength(-ds.where(ds.lat<0,drop=True))
-            psi0s = [-i/10**8 for i in psi_0s]
+            if savedata:
+                ds = xr.open_dataset(path+exp_name+'/psi.nc', decode_times=False)
+                #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0n])/len(ds.psi_0n)))
+                #print('%.2f' % (sum([math.isnan(i) for i in ds.psi_0s])/len(ds.psi_0s)))
+                ds = ds.transpose('lat','pfull','time')
+                psi_0n = get_HC_strength(ds.where(ds.lat>0,drop=True))
+                psi0n = [i/10**8 for i in psi_0n]
+                psi_0s = get_HC_strength(-ds.where(ds.lat<0,drop=True))
+                psi0s = [-i/10**8 for i in psi_0s]
 
-            if smooth is not None:
-                time  = moving_average(ds.time, smooth)
-                psi0n = moving_average(psi0n, smooth)
-                psi0s = moving_average(psi0s, smooth)
-                ls    = moving_average(ds.mars_solar_long, smooth)
+                if smooth is not None:
+                    time  = moving_average(ds.time, smooth)
+                    psi0n = moving_average(psi0n, smooth)
+                    psi0s = moving_average(psi0s, smooth)
+                    ls    = moving_average(ds.mars_solar_long, smooth)
+                else:
+                    time = ds.time
+                    psi0n = psi0n
+                    psi0s = psi0s
+                    ls = ds.mars_solar_long
+
+                ds = xr.Dataset(data_vars=dict(
+                        psi_n = (["time"], psi0n),
+                        psi_s = (["time"], psi0s),
+                        ls   = (["time"], ls),
+                    ),
+                    coords = dict(
+                        time = time,
+                    ),
+                )
+                ds.to_netcdf(path+'mars_analysis/HC_strength/%s.nc' % exp_name)
             else:
+                ds = xr.open_dataset(path+'mars_analysis/HC_strength/%s.nc' % exp_name,
+                                     decode_times=False)
+                psi0n = ds.psi_n
+                psi0s = ds.psi_s
+                ls = ds.ls
                 time = ds.time
-                psi0n = psi0n
-                psi0s = psi0s
-                ls = ds.mars_solar_long
 
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
                 or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
@@ -310,26 +349,9 @@ def plot_psi_crosssection(exp_name, tind=101,edge=False,ext='png'):
 if __name__ == "__main__":
     eps = np.arange(10,55,5)
     gamma = [0.093,0.00]
-    plot_HC_edge_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
-    plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,ext='pdf')
-    exps = []
-    
-    #for l in ['', '_lh']:
-    #    for d in ['', '_cdod_clim_scenario_7.4e-05']:
-    #        for t in ['', '_mola_topo']:
-    #            exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
-
-    for ep in eps:
-        for gam in gamma:
-            exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
-
-    for dust_scale in [3.7e-5, 7.4e-05, 1.48e-4, 2.96e-4]:
-      exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
-    
-    #for exp_name in exps:
-    #    plot_psi_crosssection(exp_name,edge=True,tind=450)
-    #for tind in np.arange(90,120):
-    #    plot_psi_crosssection('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_0.000296',
-    #    edge = True, tind = tind)
+    savedata=False
+    plot_HC_edge_evolution(    exps=['curr-ecc','0-ecc','dust'],smooth=10,
+                        ext='pdf',savedata=savedata)
+    plot_HC_strength_evolution(exps=['curr-ecc','0-ecc','dust'],smooth=10,
+                        ext='pdf',savedata=savedata)
 # %%

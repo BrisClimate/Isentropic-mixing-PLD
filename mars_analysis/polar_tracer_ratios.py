@@ -642,7 +642,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
 
     for i in range(len(exps)):
         exp = exps[i]
-        filepath = path + 'mars_analysis/%s_tracer_conc_' % exp
+        filepath = path + 'mars_analysis/tracer_concs/%s_tracer_conc_' % exp
         exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         if exp == 'curr-ecc':
@@ -872,7 +872,7 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
 
     for i in range(len(exps)):
         exp = exps[i]
-        filepath = path + 'mars_analysis/%s_tracer_conc_' % (exp)
+        filepath = path + 'mars_analysis/tracer_concs/%s_tracer_conc_' % (exp)
         exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         if exp == 'curr-ecc':

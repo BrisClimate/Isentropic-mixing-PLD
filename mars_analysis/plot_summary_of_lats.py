@@ -102,7 +102,7 @@ def get_lats_all(exps=['curr-ecc','0-ecc','dust'],level=300):
                 coords = {'exp_name':exp_names, 'hem':[0,1], 'phi':['HC','u','PV','keff']},
                 dims = ['exp_name','hem','phi'],
                 )
-            dat.to_netcdf(path+'mars_analysis/%s_summary_of_lats.nc' % exp)
+            dat.to_netcdf(path+'mars_analysis/summary_of_lats/%s_summary_of_lats.nc' % exp)
             
         lats.append(a_s)
     return lats
@@ -433,7 +433,7 @@ if __name__ == "__main__":
     else:
         lats = []
         for exp in exps:
-            d = xr.open_dataset(path+'mars_analysis/%s_summary_of_lats.nc' % exp)
+            d = xr.open_dataset(path+'mars_analysis/summary_of_lats/%s_summary_of_lats.nc' % exp)
             d = d.to_array().squeeze()
             lats.append(d)
         a, std = plot_summary_of_lats_line(lats, exps = exps,level=level,ext='pdf')
