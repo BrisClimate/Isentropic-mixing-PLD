@@ -8,7 +8,7 @@
 
 [mars_analysis/](https://github.com/emilyrball/PLD-analysis/tree/main/mars_analysis) contains scripts used to plot figures.
 
-In the following files, savedata=False will allow the user to plot figures from the published data. To calculate various diagnostics from model output, savedata=True needs to be turned on.
+In the following files, savedata=False will allow the user to plot figures from the published data. To calculate various diagnostics from model output, savedata=True can be turned on. All files can be run using the plot_env environment ([plot_env.yml](https://github.com/emilyrball/PLD-analysis/blob/main/plot_env.yml)), unless otherwise specified.
 
 ### Figure 3
 Plotted in [mars_analysis/polar_tracer_ratios.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/polar_tracer_ratios.py)
@@ -35,7 +35,7 @@ Plotted in [mars_analysis/plot_PV.py](https://github.com/emilyrball/PLD-analysis
 
 The gradient of tracer is calculated in [mars_analysis/add_gradStracer.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/add_gradStracer.py) (either on pressure or theta levels)
 
-Effective diffusivity is then calculated in [mars_analysis/calculate_keff.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/calculate_keff.py) (either on pressure or theta levels)
+Effective diffusivity is then calculated in [mars_analysis/calculate_keff.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/calculate_keff.py) (either on pressure or theta levels; this should be run in keff environment using [keff.yml](https://github.com/emilyrball/PLD-analysis/blob/main/keff.yml))
 
 This is then saved all in one place using the script [mars_analysis/concat_eps_gamma.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/concat_eps_gamma.py)
 
