@@ -31,7 +31,7 @@ Plotted in [mars_analysis/plot_jet.py](https://github.com/emilyrball/PLD-analysi
 ### Figure 15
 Plotted in [mars_analysis/plot_PV.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_PV.py)
 
-## To calculate effective diffusivity from model output...
+## To calculate effective diffusivity from model output
 
 The gradient of tracer is calculated in [mars_analysis/add_gradStracer.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/add_gradStracer.py) (either on pressure or theta levels)
 
