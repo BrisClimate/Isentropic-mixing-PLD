@@ -146,9 +146,14 @@ if __name__ == "__main__":
             exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
                 '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
 
-    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
+    for dust_scale in [7.4e-05, 3.7e-5,1.48e-4,2.96e-4,5.92e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
-
+      exps.append('tracer_vert_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
+      exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_clim_latlon_'+str(dust_scale))
+    
+    exps.append('tracer_MY28_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05')
+    
+      
     for i in exps:
         calculate_psi(i)
 
