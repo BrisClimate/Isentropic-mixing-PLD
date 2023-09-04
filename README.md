@@ -39,7 +39,7 @@ Plotted in [mars_analysis/plot_summary_of_lats.py](https://github.com/emilyrball
 Plotted in [mars_analysis/plot_deposition_timeseries.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_deposition_timeseries.py)
 
 
-# Supplementary Information
+## Supplementary Information Figures
 ### Figure 1-6
 Plotted in [mars_analysis/plot_PV_maps_anomaly.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_PV_maps_anomaly.py)
 These should be run in the environment plotting using [plotting.yml]((https://github.com/emilyrball/PLD-analysis/blob/main/keff.yml)
