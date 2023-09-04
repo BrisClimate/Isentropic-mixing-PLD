@@ -42,7 +42,7 @@ Plotted in [mars_analysis/plot_deposition_timeseries.py](https://github.com/emil
 ## Supplementary Information Figures
 ### Figure 1-6
 Plotted in [mars_analysis/plot_PV_maps_anomaly.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_PV_maps_anomaly.py)
-These should be run in the environment plotting using [plotting.yml]((https://github.com/emilyrball/PLD-analysis/blob/main/plotting.yml)
+These should be run in the environment plotting using [plotting.yml](https://github.com/emilyrball/PLD-analysis/blob/main/plotting.yml)
 
 ### Figure 7-12
 Plotted in [mars_analysis/plot_HC_anomaly.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_HC_anomaly.py) using the function plot_psi_cross_section
