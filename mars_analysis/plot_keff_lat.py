@@ -74,22 +74,34 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
     within the vortex.
     '''
     tind = tind % 360
-    tind, m = atmospy.get_timeslice(tind, mean)  
-    fig, axs = plt.subplots(nrows=len(exps),ncols=2, figsize = (15,4*len(exps)),dpi=300)
+    tind, m = atmospy.get_timeslice(tind, mean)
+    nrows = len(exps)
+    if exps.count('MY28'):
+        nrows -= 1  
+    fig, axs = plt.subplots(nrows=nrows,ncols=2, figsize = (15,4*len(exps)),dpi=300)
 
-    ds = xr.open_dataset(path+'mars_analysis/parameter_keff_test_tracer_isentropic.nc',
+    ds = xr.open_dataset(path+'mars_analysis/keffs/parameter_keff_test_tracer_isentropic.nc',
                 decode_times=False)
     
     ds0 = ds.sel(level = level, method = "nearest")    
     
 
-    ds = xr.open_dataset(path+'mars_analysis/dust_keff_test_tracer_isentropic.nc',
+    ds = xr.open_dataset(path+'mars_analysis/keffs/dust_keff_test_tracer_isentropic.nc',
                 decode_times=False)
     ds1 = ds.sel(level = level, method = "nearest")
-
     level = int(ds0.level.values)
     ls_n = ds.mars_solar_long.isel(time=tind).isel(dust_scale=0).values
     ls_s = ds.mars_solar_long.isel(time=tind+360).isel(dust_scale=0).values
+    ds = xr.open_dataset(path+'mars_analysis/keffs/vert_dust_keff_test_tracer_isentropic.nc',
+                decode_times=False)
+    ds2 = ds.sel(level = level, method = "nearest")
+
+    ds = xr.open_dataset(path+'mars_analysis/keffs/MY28_keff_test_tracer_isentropic.nc',
+                decode_times=False)
+    ds3 = ds.sel(level = level, method = "nearest")
+    ds3 = ds3.isel(time = slice(60,None))
+
+    
 
     phi_eff = ds0.new.values
     
@@ -107,6 +119,11 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
         elif exp == 'dust':
             exp = 'Dust Scale'
             d_keff = ds1
+        elif exp == 'high_res_dust':
+            exp = 'Dust Vertical Res'
+            d_keff = ds2
+        elif exp == 'MY28':
+            d_keff = ds3
         elif exp == 'attribution':
             exp = 'Attribution'
 
@@ -133,31 +150,48 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
                 keff_n = d_keff_n.isel(epsilon=j)
                 keff_s = d_keff_s.isel(epsilon=j)
             except:
-                keff_n = d_keff_n.isel(dust_scale=j)
-                keff_s = d_keff_s.isel(dust_scale=j)
+                try:
+                    keff_n = d_keff_n.isel(dust_scale=j)
+                    keff_s = d_keff_s.isel(dust_scale=j)
+                except:
+                    keff_n = d_keff_n
+                    keff_s = d_keff_s
 
             if exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05' \
-                or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05':
+                or exp_name == 'tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.000_cdod_clim_scenario_7.4e-05'\
+                    or exp_name == 'tracer_vert_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05':
                 col = 'k'
                 lnstl = '--'
+            elif exp_name == 'tracer_MY28_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05':
+                col = 'xkcd:crimson'
+                lnstl = '-.'
             else:
                 lnstl = '-'
                 col = colors[l]
                 l += 1
-            ax = axs[i,0]
+
+            if exp == 'MY28':
+                ax = axs[i-2,0]
+            else:
+                ax = axs[i,0]
+
             ax.plot(phi_eff, np.log(keff_n),label=titles[j],color=col,linestyle=lnstl)
 
             ax.set_xlim([40,90])
             ax.set_ylim([0, 4.5])
-            ax.text(
+            if exp != 'MY28':
+                ax.text(
                     -0.16, 0.5, exp,
                     ha='right',
                     va='center',
                     transform=ax.transAxes,
                     rotation='vertical',
                     fontsize='large',
-            )
-            ax = axs[i,1]
+                )
+            if exp == 'MY28':
+                ax = axs[i-2,1]
+            else:
+                ax = axs[i,1]
             ax.plot(phi_eff, np.log(keff_s),label=titles[j],color=col,linestyle=lnstl)
 
             ax.set_xlim([-40,-90])
@@ -170,9 +204,10 @@ def plot_keff_lat(exps=['curr-ecc','0-ecc','dust'], \
             if i < 2*len(exps)-2:
                 ax.set_xticklabels([])
             else:
-                
                 ax.set_xlabel('effective latitude',fontsize='large')
             
+            if exps.count('MY28') and i >= 2*len(exps)-6:
+                ax.set_xlabel('effective latitude',fontsize='large')
             if i % 2 == 1:
                 ax.legend(loc='center left', bbox_to_anchor=(1.05,0.5,),
                  borderaxespad=0, fontsize='large')
@@ -216,13 +251,13 @@ def plot_keff_lat_PV(exps=['curr-ecc','0-ecc','dust'], \
     fig1, axs1 = plt.subplots(nrows=len(exps),ncols=3, figsize = (20,4*len(exps)),dpi=300)
     fig2, axs2 = plt.subplots(nrows=len(exps),ncols=3, figsize = (20,4*len(exps)),dpi=300)
 
-    ds = xr.open_dataset(path+'mars_analysis/parameter_keff_test_tracer_isentropic.nc',
+    ds = xr.open_dataset(path+'parameter_keff_test_tracer_isentropic.nc',
                 decode_times=False)
     
     ds0 = ds.sel(level = level, method = "nearest")    
     
 
-    ds = xr.open_dataset(path+'mars_analysis/dust_keff_test_tracer_isentropic.nc',
+    ds = xr.open_dataset(path+'dust_keff_test_tracer_isentropic.nc',
                 decode_times=False)
     ds1 = ds.sel(level = level, method = "nearest")
 
@@ -235,7 +270,7 @@ def plot_keff_lat_PV(exps=['curr-ecc','0-ecc','dust'], \
     
     for i in range(len(exps)):
         exp = exps[i]
-        exp_names, titles, _, _ = get_exps(exp)
+        exp_names, titles, _, _ = atmospy.get_exps(exp)
         
         colors = plt.cm.viridis(np.linspace(0,1,int(len(exp_names)-1)))
         
@@ -435,9 +470,108 @@ def plot_keff_lat_PV(exps=['curr-ecc','0-ecc','dust'], \
                 + 'keff_PV_vs_lat_%iK_%03d%s_sh.%s' % (level, tind, sols, ext), dpi=300,
                 bbox_inches='tight')
 
-def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext='png'):
+def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, \
+                           smooth=None, res = '', ext='png'):
+    if res == '':
+        exp_names, titles, nrows, ncols = atmospy.get_exps('dust')
+    else:
+        exp_names, titles, nrows, ncols = atmospy.get_exps('high_res_dust')
+    fig, axs = plt.subplots(nrows=ncols,ncols=nrows, figsize = (nrows*10,ncols*2.5),)
     
-    exp_names, titles, nrows, ncols = get_exps('dust')
+    lims = [0,4]
+
+    boundaries, cmap, norm = atmospy.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+
+    for i, ax in enumerate(fig.axes):
+        ax.text(0, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
+            size='large')
+        
+        ax.set_ylim([-90,90])
+
+    d_keff = xr.open_dataset(
+        path + 'mars_analysis/isentropic_vars/%sdust_%iK.nc' % (res,level), decode_times = False,)
+    
+    d_keff["time"] = d_keff.mars_solar_long[0].values
+    d_keff = d_keff.sortby("time", ascending = True)
+
+    lat = d_keff.lat.values
+
+    for i, ax in enumerate(fig.axes):
+        exp_name = exp_names[i]
+                
+        di = d_keff.isel(dust_scale=i)
+
+        #ax.set_xlabel('L$_s$ ($^\circ$)')
+        ax.set_ylabel('equivalent latitude')
+        ax.set_title('$\lambda = $' + titles[i])
+        
+        if i == ncols - 1:
+            ax.set_xlabel('L$_s$ ($^\circ$)')
+        else:
+            ax.set_xticklabels([])
+
+        if smooth is not None:
+            time  = atmospy.moving_average(di.time, smooth)
+            keff   = atmospy.moving_average_2d(di.keff.transpose(), smooth)
+            ucomp = atmospy.moving_average_2d( di.ucomp.transpose(), smooth)
+            #PV    = atmospy.moving_average_2d( di.PV.transpose(), smooth)
+        else:
+            time = di.time
+            keff  = di.keff.transpose()
+            ucomp = di.ucomp.transpose()
+            #PV    = di.PV.transpose()
+             
+
+        c1=ax.contourf(time, lat, np.log(keff),
+                cmap=cmap, norm=norm,levels=[boundaries[0]-50]+boundaries+[boundaries[-1]+ 150])
+
+        if winds:
+            c0 = ax.contour(time, lat, ucomp,
+                levels=[-50,0,50,100,150], colors='black',linewidths=1)
+            c0.levels = [atmospy.nf(val) for val in c0.levels]
+            ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
+        if PVmax:
+            PV = di.PV
+            l = get_PV_lats(PV.where(PV.lat>20,drop=True).where(
+                di.mars_solar_long>180,drop=True), hem='nh')
+            if smooth is not None:
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
+                    di.time.where(di.mars_solar_long>180,drop=True), smooth)
+            else:
+                time = di.time.where(di.mars_solar_long>180,drop=True)
+            ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
+
+            l = get_PV_lats(PV.where(PV.lat<-20,drop=True).where(
+                di.mars_solar_long<180,drop=True), hem='sh')
+            if smooth is not None:
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
+                    di.time.where(di.mars_solar_long<180,drop=True), smooth)
+            else:
+                time = di.time.where(di.mars_solar_long<180,drop=True)
+            ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
+        #ax.set_xlim([np.min(di.time),np.max(di.time)])
+        #xlocs = [k for k in ax.get_xticks()]
+        #ls = di.mars_solar_long.interp(time=xlocs,kwargs={"fill_value":"extrapolate"})#, d.time)
+    
+        #ax.set_xticklabels(['%i' % k for k in ls])
+        ax.set_xticks([0,60,120,180,240,300,360])
+        ax.set_ylim([di.lat.min().values,di.lat.max().values])
+    
+    fig.colorbar(
+        cm.ScalarMappable(norm=norm, cmap=cmap),
+        ticks=boundaries,
+        ax = axs, pad = 0.05, aspect=50,
+        label='normalized effective diffusivity', extend='max')
+    
+    fig.savefig(figpath+'%sdust_hov_' % res + \
+            '%iK.%s' % (level, ext),
+            bbox_inches='tight')
+    
+def plot_keff_lat_hov_latlon(level = 300, PVmax=True, winds=True, \
+                           smooth=None, ext='png'):
+    exp_names, titles, nrows, ncols = atmospy.get_exps('long-dust')
     fig, axs = plt.subplots(nrows=nrows,ncols=ncols, figsize = (ncols*4,nrows*3.5),)
     
     lims = [0,4]
@@ -451,7 +585,7 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
         ax.set_ylim([-90,90])
 
     d_keff = xr.open_dataset(
-        path + 'mars_analysis/dust_keff_test_tracer_isentropic.nc', decode_times = False,)
+        path + 'mars_analysis/keffs/latlon_keff_test_tracer_isentropic.nc', decode_times = False,)
 
     d_keff = d_keff.sel(level=level,method="nearest")
 
@@ -469,11 +603,16 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
         except:
             continue
         
-        dis = d_keff.nkeff.isel(dust_scale=i)
+        dis = d_keff.nkeff
+        dis["time"] = d.mars_solar_long.values
+        d["time"]   = d.mars_solar_long.values
+        
+        dis = dis.sortby("time", ascending = True)
+        d   =   d.sortby("time", ascending = True)
 
-        ax.set_xlabel('solar longitude')
+        ax.set_xlabel('L$_s$ ($^\circ$)')
 
-        ax.set_title('Dust Scaling = ' + titles[i])
+        ax.set_title(titles[i])
         
         if i % 4 == 0:
             ax.set_ylabel('equivalent latitude')
@@ -525,33 +664,29 @@ def plot_keff_lat_hov_dust(level = 300, PVmax=True, winds=True, smooth=None,ext=
             else:
                 time = di.time.where(di.mars_solar_long<180,drop=True)
             ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
-        ax.set_xlim([np.min(di.time),np.max(di.time)])
-        xlocs = [k for k in ax.get_xticks()]
-        ls = di.mars_solar_long.interp(time=xlocs,kwargs={"fill_value":"extrapolate"})#, d.time)
+        #ax.set_xlim([np.min(di.time),np.max(di.time)])
+        #xlocs = [k for k in ax.get_xticks()]
+        #ls = di.mars_solar_long.interp(time=xlocs,kwargs={"fill_value":"extrapolate"})#, d.time)
     
-        ax.set_xticklabels(['%i' % k for k in ls])
+        ax.set_xticks([0,60,120,180,240,300,360])
         ax.set_ylim([di.lat.min().values,di.lat.max().values])
     
     fig.colorbar(
         cm.ScalarMappable(norm=norm, cmap=cmap),
         ticks=boundaries[slice(None,None,2)],
-        ax = axs, pad = 0.01,
+        ax = axs, pad = 0.21, orientation='horizontal',
         label='normalized effective diffusivity', extend='max')
     
-    fig.savefig(figpath+'dust_hov_' + \
+    fig.savefig(figpath+'latlon_hov_' + \
             '%iK.%s' % (level, ext),
             bbox_inches='tight')
 
 
-
-def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None, half=False,ext='png'):
-    eps = [10,15,20,25,30,35,40,45,50]
-    if half == True:
-        eps = [10,20,30,40,50]
-    gamma = [0.093,0]
-
-    fig, axs = plt.subplots(nrows=2,ncols=len(eps), figsize = (len(eps)*3,7),)
-        
+def plot_keff_lat_hov_MY28(level = 300, PVmax=True, winds=True, \
+                           smooth=None, ext='png'):
+    exp_names, titles, nrows, ncols = atmospy.get_exps('MY28')
+    fig, axs = plt.subplots(nrows=nrows,ncols=ncols, figsize = (ncols*4,nrows*3.5),)
+    
     lims = [0,4]
 
     boundaries, cmap, norm = atmospy.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
@@ -563,35 +698,144 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
         ax.set_ylim([-90,90])
 
     d_keff = xr.open_dataset(
-        path + 'mars_analysis/parameter_keff_test_tracer_isentropic.nc', decode_times = False,)
+        path + 'mars_analysis/keffs/MY28_keff_test_tracer_isentropic.nc', decode_times = False,)
 
     d_keff = d_keff.sel(level=level,method="nearest")
 
 
+    for i, ax in enumerate(fig.axes):
+        exp_name = exp_names[i]
+        try:
+            d = xr.open_dataset(
+                path + exp_name + '/atmos_isentropic.nc', decode_times = False,)
+            
+            print(exp_name)
+
+            d = d[["PV", "ucomp", "mars_solar_long"]].sel(level=level,method="nearest")
+            
+        except:
+            continue
+        
+        dis = d_keff.nkeff
+        dis["time"] = d.mars_solar_long.values
+        d["time"]   = d.mars_solar_long.values
+        
+        dis = dis.sortby("time", ascending = True)
+        d   =   d.sortby("time", ascending = True)
+
+        ax.set_xlabel('L$_s$ ($^\circ$)')
+
+        ax.set_title(titles[i])
+        
+        if i % 4 == 0:
+            ax.set_ylabel('equivalent latitude')
+        else:
+            ax.set_yticklabels([])
+
+        di = d.mean(dim=["lon"])
+        new = dis.new.values
+        if smooth is not None:
+            
+            time  = atmospy.moving_average(   dis.time, smooth)
+            dis   = atmospy.moving_average_2d(     dis.transpose(), smooth)
+            ucomp = atmospy.moving_average_2d(di.ucomp.transpose(), smooth)
+            #PV    = atmospy.moving_average_2d(   di.PV.transpose(), smooth)
+        else:
+            time = dis.time
+            dis = dis.transpose()
+            ucomp = di.ucomp.transpose()
+            #PV = di.PV.transpose()
+             
+
+        c1=ax.contourf(time, new, np.log(dis),
+                cmap=cmap, norm=norm,levels=[boundaries[0]-50]+boundaries+[boundaries[-1]+ 150])
+
+        lat  =  di.lat.values
+        if winds:
+            c0 = ax.contour(time, lat, ucomp,
+                levels=[-50,0,50,100,150], colors='black',linewidths=1)
+            c0.levels = [atmospy.nf(val) for val in c0.levels]
+            ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
+        if PVmax:
+            PV = di.PV
+            l = get_PV_lats(PV.where(PV.lat>20,drop=True).where(
+                di.mars_solar_long>180,drop=True), hem='nh')
+            if smooth is not None:
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
+                    di.time.where(di.mars_solar_long>180,drop=True), smooth)
+            else:
+                time = di.time.where(di.mars_solar_long>180,drop=True)
+            ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
+
+            l = get_PV_lats(PV.where(PV.lat<-20,drop=True).where(
+                di.mars_solar_long<180,drop=True), hem='sh')
+            if smooth is not None:
+                l    = atmospy.moving_average(l, smooth)
+                time = atmospy.moving_average(
+                    di.time.where(di.mars_solar_long<180,drop=True), smooth)
+            else:
+                time = di.time.where(di.mars_solar_long<180,drop=True)
+            ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
+        #ax.set_xlim([np.min(di.time),np.max(di.time)])
+        #xlocs = [k for k in ax.get_xticks()]
+        #ls = di.mars_solar_long.interp(time=xlocs,kwargs={"fill_value":"extrapolate"})#, d.time)
+    
+        ax.set_xticks([0,60,120,180,240,300,360])
+        ax.set_ylim([di.lat.min().values,di.lat.max().values])
+    
+    fig.colorbar(
+        cm.ScalarMappable(norm=norm, cmap=cmap),
+        ticks=boundaries[slice(None,None,2)],
+        ax = axs, pad = 0.21, orientation='horizontal',
+        label='normalized effective diffusivity', extend='max')
+    
+    fig.savefig(figpath+'MY28_hov_' + \
+            '%iK.%s' % (level, ext),
+            bbox_inches='tight')
+
+
+def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None, half=False,ext='png'):
+    eps = [10,15,20,25,30,35,40,45,50]
+    if half == True:
+        eps = [10,20,30,40,50]
+    gamma = [0.093,0]
+
+    fig, axs = plt.subplots(nrows=len(eps),ncols=2, figsize = (10,len(eps)*2),)
+        
+    lims = [0,4]
+
+    boundaries, cmap, norm = atmospy.new_cmap(lims, extend='max', i = 10, override=True, cols='YlGn')
+
+    for i, ax in enumerate(fig.axes):
+        ax.text(-0.05, 1.05, string.ascii_lowercase[i]+')', transform=ax.transAxes, 
+            size='large')
+        
+        ax.set_ylim([-90,90])
+
+    d_keff = xr.open_dataset(
+        path + 'mars_analysis/isentropic_vars/parameter_%iK.nc' % level, decode_times = False,)
+    lat = d_keff.lat.values
     for j in range(len(eps)):
         for i in range(len(gamma)):
             exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' + \
                 '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps[j], gamma[i])
 
-            ax = axs[i,j]
-            try:
-                d = xr.open_dataset(
-                    path + exp_name + '/atmos_isentropic.nc', decode_times = False,)
-
-                print(exp_name)
-
-                d = d[["PV", "ucomp", "mars_solar_long"]].sel(level=level,method="nearest")
-
-            except:
-                continue
+            ax = axs[j,i]
             
-            dis = d_keff.nkeff.sel(epsilon=eps[j]).sel(gamma=gamma[i])
+            
+            dis = d_keff.sel(epsilon=eps[j]).sel(gamma=gamma[i])
+            if gamma[i]:
+                ls = d_keff.mars_solar_long.sel(epsilon=eps[j]).sel(gamma=gamma[i]).values
+            dis["time"] = ls
+            
+            dis = dis.sortby("time", ascending = True)
 
-            if j == 0:
+            if i == 0:
                 ax.set_ylabel('equivalent latitude')
-                ytext = '$\gamma = %.3f$' % gamma[i]
+                ytext = '$\epsilon = %i^\circ$' % eps[j]
                 ax.text(
-                    -0.46, 0.5, ytext,
+                    -0.2, 0.5, ytext,
                     ha='right',
                     va='center',
                     transform=ax.transAxes,
@@ -600,81 +844,73 @@ def plot_keff_lat_hov_parameter(level = 300, PVmax=True, winds=True, smooth=None
                 )
             else:
                 ax.set_yticklabels([])
+            ax.set_xticks([0,60,120,180,240,300,360])
+            ax.set_xticklabels([])
+            if j == 0:
+                ax.set_title('$\gamma = %.3f$' % gamma[i])
+            elif eps[j] == eps[-1]:
+                ax.set_xticklabels([0,60,120,180,240,300,360])
+                ax.set_xlabel('L$_s$ ($^\circ$)')
 
-            if i == 0:
-                ax.set_title('$\epsilon = %i^\circ$' % eps[j])
-                ax.set_xticklabels([])
-            else:
-                ax.set_xlabel('solar longitude')
-
-            di = d.mean(dim=["lon"])
-            new = dis.new.values
             if smooth is not None:
 
                 time  = atmospy.moving_average(   dis.time, smooth)
-                dis   = atmospy.moving_average_2d(     dis.transpose(), smooth)
-                ucomp = atmospy.moving_average_2d(di.ucomp.transpose(), smooth)
+                keff   = atmospy.moving_average_2d(dis.keff.transpose(), smooth)
+                ucomp = atmospy.moving_average_2d(dis.ucomp.transpose(), smooth)
                 #PV   = atmospy.moving_average_2d(   di.PV.transpose(), smooth)
             else:
                 time = dis.time
-                dis = dis.transpose()
-                ucomp = di.ucomp.transpose()
+                keff = dis.keff.transpose()
+                ucomp = dis.ucomp.transpose()
                 #PV = di.PV.transpose()
 
 
-            c1=ax.contourf(time, new, np.log(dis),
+            c1=ax.contourf(time, lat, np.log(keff),
                     cmap=cmap, norm=norm,levels=[boundaries[0]-50]+boundaries+[boundaries[-1]+ 150])
 
-            lat  =  di.lat.values
             if winds:
                 c0 = ax.contour(time, lat, ucomp,
                     levels=[-50,0,50,100,150], colors='black',linewidths=1)
                 c0.levels = [atmospy.nf(val) for val in c0.levels]
                 ax.clabel(c0, c0.levels, inline=1, fmt = fmt, fontsize ='small')
             if PVmax:
-                PV = di.PV
+                PV = dis.PV
                 if gamma[i] != 0.:
-                    cond1 = (di.mars_solar_long>220)# or (di.mars_solar_long<50)
+                    cond1 = (dis.mars_solar_long>220)# or (di.mars_solar_long<50)
                 l = get_PV_lats(PV.where(PV.lat>20,drop=True).where(
                     cond1,drop=True), hem='nh')
                 if smooth is not None:
                     l  = atmospy.moving_average(l, smooth)
                     time = atmospy.moving_average(
-                        di.time.where(cond1,drop=True), smooth)
+                        dis.time.where(cond1,drop=True), smooth)
                 else:
-                    time = di.time.where(cond1,drop=True)
+                    time = dis.time.where(cond1,drop=True)
                 ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
 
                 if gamma[i] != 0.:
-                    cond2 = (di.mars_solar_long<180)
+                    cond2 = (dis.mars_solar_long<180)
                 l = get_PV_lats(PV.where(PV.lat<-20,drop=True).where(
                     cond2,drop=True), hem='sh')
                 if smooth is not None:
                     l  = atmospy.moving_average(l, smooth)
                     time = atmospy.moving_average(
-                        di.time.where(cond2,drop=True), smooth)
+                        dis.time.where(cond2,drop=True), smooth)
                 else:
-                    time = di.time.where(cond2,drop=True)
+                    time = dis.time.where(cond2,drop=True)
                 ax.plot(time, l, linestyle='-', color='xkcd:orchid', linewidth=2.5)
-            ax.set_xlim([np.min(di.time),np.max(di.time)])
-            xlocs = [k for k in ax.get_xticks()]
-            if gamma[i] != 0.:
-                ls = di.mars_solar_long.interp(time=xlocs,kwargs={"fill_value":"extrapolate"})#, d.time)
-                ax.set_xticklabels([])
-            else:
-                ax.set_xticklabels(['%i' % k for k in ls])
-            ax.set_ylim([di.lat.min().values,di.lat.max().values])
+            ax.set_xticks([0,60,120,180,240,300,360])
+            ax.set_ylim([dis.lat.min().values,dis.lat.max().values])
     
+    plt.tight_layout()
     fig.colorbar(
         cm.ScalarMappable(norm=norm, cmap=cmap),
-        ticks=boundaries[slice(None,None,2)],
-        ax = axs, pad = 0.01,
+        ticks=boundaries,
+        ax = axs,pad = 0.025,aspect=50,
         label='normalized effective diffusivity', extend='max')
     if half:
         half=''
     else:
         half='_all'
-    
     fig.savefig(figpath+'parameter_hov_' + \
             '%iK%s.%s' % (level,half,ext),
             bbox_inches='tight')
@@ -684,8 +920,12 @@ if __name__ == "__main__":
     eps = np.arange(10,55,5)
     gamma = [0.093,0.00]
     
-    #plot_keff_lat(level=300,mean=10,tind=170)
-    plot_keff_lat_PV(mean=10,tind=110,half=False,level=300, ext='pdf')
-    #plot_keff_lat_hov_dust(level=300, smooth=30,ext='pdf')
-    #plot_keff_lat_hov_parameter(level=300, smooth=30, half=True,ext='pdf')
+    #plot_keff_lat(exps = ['curr-ecc','0-ecc','dust','high_res_dust','MY28'],
+    #              level=300,mean=10,tind=110)
+    #plot_keff_lat_PV(mean=10,tind=110,half=False,level=300, ext='pdf')
+    #plot_keff_lat_hov_latlon()
+    #plot_keff_lat_hov_dust(level=300, smooth=30,ext='pdf',res='')
+    #plot_keff_lat_hov_dust(level=300, smooth=30,ext='pdf',res='vert_')
+    #plot_keff_lat_hov_MY28(level=300, smooth=30,ext='pdf')
+    plot_keff_lat_hov_parameter(level=300, smooth=30, half=True,ext='pdf')
 # %%

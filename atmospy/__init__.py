@@ -11,12 +11,10 @@ from .analysis_functions import filestrings, \
                                 calc_PV_max, \
                                 moving_average_2d, \
                                 get_init_sol, \
-                                open_files, get_exps
+                                open_files, get_exps, \
+                                xr_add_cyclic_point
 from .tropd_exo import find_STJ_jets, \
                        TropD_Metric_PSI
 
-from .PVmodule import potential_temperature, \
-                     potential_vorticity_baroclinic, \
-                     isent_interp
 
 __version__ = "0.0.1"

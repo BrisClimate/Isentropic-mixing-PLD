@@ -21,13 +21,6 @@ import scipy.stats as st
 from scipy.signal import convolve2d
 from cartopy.util import add_cyclic_point
 
-import metpy.interpolate
-from metpy.units import units
-import windspharm.xarray as windx
-#import time
-import scipy.optimize as so
-from metpy.calc.tools import (broadcast_indices, find_bounding_indices,
-                              _less_or_close)
 
 if not sys.warnoptions:
     import warnings
@@ -45,7 +38,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 #### in any subsequent function
 
 g       = 3.72076
-p0      = 610. *units.Pa
+p0      = 610.
 kappa   = 1/4.4
 omega   = 7.08822e-05
 rsphere = 3.3962e6
@@ -77,12 +70,43 @@ def get_exps(exps):
         ncols = 4
 
     elif exps == 'dust':
-        titles = ['1/2', '1', '2', '4']
-        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4]:
+        titles = ['1/2', '1', '2', '4', '8']
+        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4,5.92e-4]:
             exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
                     '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
         nrows = 1
-        ncols = 4
+        ncols = 5
+    elif exps == 'high_res_dust':
+        titles = [
+            '25 levels, $\lambda=1/2$',
+            '50 levels, $\lambda=1/2$',
+            '25 levels, $\lambda=1$',
+            '50 levels, $\lambda=1$',
+            '25 levels, $\lambda=2$',
+            '50 levels, $\lambda=2$',
+            '25 levels, $\lambda=4$',
+            '50 levels, $\lambda=4$',
+        ]
+        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4]:
+            exp_names.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
+            exp_names.append('tracer_vert_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
+        nrows = 4
+        ncols = 2
+    elif exps == 'vert_dust_only':
+        titles = [
+            '$\lambda=1/2$',
+            '$\lambda=1$',
+            '$\lambda=2$',
+            '$\lambda=4$',
+            '$\lambda=8$',
+        ]
+        for ds in [3.7e-5, 7.4e-5,1.48e-4,2.96e-4,5.92e-4]:
+            exp_names.append('tracer_vert_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_%s' % str(ds))
+        nrows = 5
+        ncols = 1
     elif exps == '0-ecc':
         titles = []
         for j in eps:
@@ -99,6 +123,73 @@ def get_exps(exps):
                     '%i_gamma_0.093_cdod_clim_scenario_7.4e-05' %(j))
         nrows = 1
         ncols = len(eps)
+    elif exps == 'MY28':
+        titles = ['MY28']
+        exp_names = ['tracer_MY28_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_7.4e-05']
+        nrows=1
+        ncols=1
+
+    elif exps == 'long-dust':
+        titles = ['Zonally-averaged Dust, $\lambda=1/2$',
+                  'Longitudinal Dust, $\lambda=1/2$',
+                  'Zonally-averaged Dust, $\lambda=1$',
+                  'Longitudinal Dust, $\lambda=1$',
+                  'Zonally-averaged Dust, $\lambda=2$',
+                  'Longitudinal Dust, $\lambda=2$',
+                  'Zonally-averaged Dust, $\lambda=4$',
+                  'Longitudinal Dust, $\lambda=4$',
+                  ]
+        exp_names = [
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_3.7e-05',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_3.7e-05',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_7.4e-05',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_7.4e-05',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_0.000148',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_0.000148',
+
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_cdod_clim_scenario_0.000296',
+                    
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_0.000296',
+                
+        ]
+        nrows=4
+        ncols=2
+    elif exps == 'long-dust_only':
+        titles = ['$\lambda=1/2$',
+                  '$\lambda=1$',
+                  '$\lambda=2$',
+                  '$\lambda=4$',
+                  '$\lambda=8$',
+                  ]
+        exp_names = [
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_3.7e-05',
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_7.4e-05',
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_0.000148',
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_0.000296',
+            'tracer_soc_mars_mola_topo_lh_eps_' + \
+                    '25_gamma_0.093_clim_latlon_0.000592',
+                
+        ]
+        nrows=5
+        ncols=1
 
     
     return exp_names, titles, nrows, ncols
@@ -110,7 +201,7 @@ def open_files(path, exp_name, isentropic=False, tname='test_tracer'):
     else:
         isent = '_isentropic'
     
-    if tname is not 'test_tracer':
+    if tname != 'test_tracer':
         tname = 'test_tracer'
     ds = xr.open_dataset(
         	path + exp_name + '/keff%s_%s.nc' % (isent, tname), decode_times = False,)
@@ -693,14 +784,23 @@ def make_stereo_plot(ax, lats, lons, circle, **kwargs):
     linestyle = kwargs.pop('linestyle', '-')
     color = kwargs.pop('color', 'black')
     alpha = kwargs.pop('alpha', 1)
+    gl = ax.gridlines(crs = ccrs.PlateCarree(), linewidth = linewidth,
+                      linestyle = linestyle, color = color, alpha = alpha,
+                      draw_labels=True)
+    
+    gl.xlocator = ticker.FixedLocator(lons)
+    gl.xlabel_style = {'fontsize':'small'}
+    gl.ylocator = ticker.FixedLocator([])
+    #ax.set_boundary(circle, transform=ax.transAxes)
+    ax.set_frame_on(False)
+    
 
     gl = ax.gridlines(crs = ccrs.PlateCarree(), linewidth = linewidth,
-                      linestyle = linestyle, color = color, alpha = alpha)
-
-    ax.set_boundary(circle, transform=ax.transAxes)
-
+                      linestyle = linestyle, color = color, alpha = alpha,
+                      draw_labels=False)
     gl.ylocator = ticker.FixedLocator(lats)
-    gl.xlocator = ticker.FixedLocator(lons)
+    gl.xlocator = ticker.FixedLocator([])
+    
 
 def make_colourmap(vmin, vmax, step, **kwargs):
     '''

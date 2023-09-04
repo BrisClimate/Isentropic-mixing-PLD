@@ -30,10 +30,11 @@ else:
     fmt = '%r'
 
 def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
-            n=np.arange(1,30), tind=101, hem='nh', method='int', level=[1,0.1]):
+            n=np.arange(1,30), tind=101, hem='nh', method='int', level=[1,0.1], \
+                res = '',):
     
-    scal = [3.7e-5,7.4e-5,1.48e-4,2.96e-4]
-    ticks = [1/2, 1, 2, 4]
+    scal = [3.7e-5,7.4e-5,1.48e-4,2.96e-4,5.92e-4]
+    ticks = [1/2, 1, 2, 4, 8]
 
     colors = plt.cm.viridis(np.linspace(0,1,int(len(n))))
     matplotlib.rcParams['axes.prop_cycle'] = (
@@ -49,7 +50,7 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
     es = []
     for j in range(len(scal)):
     
-        exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' + \
+        exp_name = 'tracer_%ssoc_mars_mola_topo_lh_eps_' % res + \
             '25_gamma_0.093_cdod_clim_scenario_' + str(scal[j])
 
         
@@ -75,12 +76,12 @@ def plot_polar_conc_ratio_dust(tname='test_tracer', isentropic=False, ylim=80, \
 
         if method == 'int' and isentropic == False:
             
-            di  =  di.where( di.pfull <= level[0], drop = True)
-            di  =  di.where( di.pfull >= level[1], drop = True)
+            di  =  di.where( di.level <= level[0], drop = True)
+            di  =  di.where( di.level >= level[1], drop = True)
             if not isentropic:
-                weights = di.pfull
+                weights = di.level
                 di = di.weighted(weights)
-            di = di.mean(dim="pfull")
+            di = di.mean(dim="level")
 
 
         elif method == 'int' and isentropic == True:
@@ -310,8 +311,8 @@ def plot_polar_conc_ratio(tname='test_tracer', isentropic=False, \
 def plot_multiple_times_dust(tname='test_tracer', isentropic=True, \
             n=np.arange(1,30), tinds=[60,90,120], hems=['nh','sh'], method='level', level=300, ylim=80):
     
-    scal = [3.7e-5,7.4e-5,1.48e-4,2.96e-4]
-    ticks = [1/2, 1, 2, 4]
+    scal = [3.7e-5,7.4e-5,1.48e-4,2.96e-4,5.92e-4]
+    ticks = [1/2, 1, 2, 4, 8]
 
     colors = plt.cm.viridis(np.linspace(0,1,int(len(n))))
     matplotlib.rcParams['axes.prop_cycle'] = (
@@ -627,8 +628,8 @@ def plot_multiple_times(tname='test_tracer', isentropic=True, \
             bbox_inches='tight', dpi=300)
     
 
-def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
-            tinds=[60,90,120], method='level', level=300, ylim=80, ext='png'):
+def plot_multiple_times_all(tname='test_tracer', isentropic=True, res=None, plotMY28=False,\
+            tinds=[60,90,120], method='level', level=300, ylim=80, ext='png',long=False):
     eps = [10,15,20,25,30,35,40,45,50]
     gamma = [0.093,0.]
 
@@ -636,8 +637,16 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
     matplotlib.rcParams['axes.prop_cycle'] = (
             cycler('linestyle', ['-','--'])
         )
-    exps = ['curr-ecc','0-ecc','dust',]#'attribution']
+    exps = ['curr-ecc','0-ecc','dust']
     fig,  axs  = plt.subplots(nrows=len(exps)-1,ncols=2, figsize = (10,10), dpi = 300)
+    
+    if res == '_vert':
+        exps.append('vert_dust_only')
+    if long:
+        exps.append('long-dust_only')
+    if plotMY28:
+        exps.append('MY28')
+    
     
 
     for i in range(len(exps)):
@@ -657,6 +666,13 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
             exp = 'Dust Scale'
             lnstl = '-'
             col = 'xkcd:darkgreen'
+        elif exp == 'high_res_dust' or exp == 'vert_dust_only':
+            exp = 'High Vertical Res'
+            lnstl = '-.'
+            col = 'xkcd:aquamarine'
+        elif exp == 'long-dust_only':
+            exp = 'Longitudinal Dust'
+            lnstl = '--'
         elif exp == 'attribution':
             exp = 'Attribution'
             lnstl = '-'
@@ -676,12 +692,21 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
             for j in range(len(exp_names)):
 
                 exp_name = exp_names[j]
-            
-                d = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
-            
-                di  =  d.isel(time=[tind,tind+29,tind+360,tind+389])
+                try:
+                    if isentropic:
+                        d = xr.open_dataset(path+exp_name+'/atmos_isentropic.nc', decode_times=False)
+                    else:
+                        d = xr.open_dataset(path+exp_name+'/atmos.nc', decode_times=False)
+                    
+
+                except:
+                    continue
+                if exp != 'MY28':
+                    di  =  d.isel(time=[tind,tind+29,tind+360,tind+389])
+                    
+                else:
+                    di  =  d.isel(time=[tind+60,tind+60+29,tind+60+360,tind+60+389])
                 ls = di.mars_solar_long
-                
                 di  = di.test_tracer
                 
 
@@ -748,7 +773,8 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
                 
                 if exp == '$\gamma = 0.093$' or exp == '$\gamma = 0.000$':
                     ax = axs[0, k]
-                elif exp == 'Dust Scale':
+                elif exp == 'Dust Scale' or exp == 'High Vertical Res' \
+                        or exp == 'MY28' or exp == 'Longitudinal Dust':
                     ax = axs[1, k]
                 else:
                     ax = axs[2, k]
@@ -757,23 +783,29 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
                 
                 if k == 0:
                     nh.append(rs)
-                    labl = 'Init L$_s$: %i$^\circ$' % (d.mars_solar_long.isel(time=tind).values)
+                    labl = 'L$_s$ %i:%i$^\circ$' % (d.mars_solar_long.isel(time=tind).values,d.mars_solar_long.isel(time=tind+29).values)
                 else:
                     sh.append(rs)
-                    labl = 'Init L$_s$: %i$^\circ$' % (d.mars_solar_long.isel(time=tind+360).values)
+                    labl = 'L$_s$ %i:%i$^\circ$' % (d.mars_solar_long.isel(time=tind+360).values,d.mars_solar_long.isel(time=tind+389).values)
                 
-                if exp == '$\gamma = 0.000$':
+                if exp == '$\gamma = 0.000$' or exp == 'High Vertical Res' \
+                        or exp == 'MY28' or exp == 'Longitudinal Dust':
                     labl = None
-                ax.plot(rs.exp, rs*100, label = labl,linewidth=0.8,
-                    linestyle = lnstl, c = cmap(t),alpha=0.6, zorder=0)
                 
+                if exp != 'MY28':
+                    ax.plot(rs.exp, rs*100, label = labl,linewidth=0.8,
+                        linestyle = lnstl, c = cmap(t),alpha=0.6, zorder=0)
+                else:
+                    ax.plot(rs.exp+1, rs*100, label = labl,linewidth=0.8,
+                        linestyle = lnstl, marker='o', c = cmap(t),alpha=0.6, zorder=0)
             #
             #    ls.append()
         
         for k in [0,1]:
             if exp == '$\gamma = 0.093$' or exp == '$\gamma = 0.000$':
                 ax = axs[0, k]
-            elif exp == 'Dust Scale':
+            elif exp == 'Dust Scale' or exp == 'High Vertical Res' \
+                        or exp == 'MY28' or exp == 'Longitudinal Dust':
                 ax = axs[1, k]
             else:
                 ax = axs[2, k]
@@ -782,15 +814,20 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
                 rs = nh
             else:
                 rs = sh
-            if exp == '$\gamma = 0.000$':
+            if exp == '$\gamma = 0.000$' or exp == 'High Vertical Res' \
+                        or exp == 'MY28' or exp == 'Longitudinal Dust':
                 labl = None
             else:
                 labl = 'Winter average'
 
             rs = xr.concat(rs,dim="time")
             rs = rs.mean(dim="time")
-            ax.plot(rs.exp, rs*100, label = labl, linewidth=1.7,
+            if exp != 'MY28':
+                ax.plot(rs.exp, rs*100, label = labl, linewidth=1.7,
                     linestyle = lnstl, c = 'k',alpha=1,zorder=1)
+            else:
+                ax.scatter(rs.exp+1, rs*100, label = 'MY28', linewidth=1.7,
+                    linestyle = lnstl, marker='o', c = 'k',alpha=1,zorder=1)
             #for b in range(len(rs[0])):
             #    for a in range(len(rs)):
             #        r += rs[a][b]
@@ -820,20 +857,30 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
         ax2.plot([],[],c='k',linestyle='--',label='$\gamma=0.000$')
         ax2.legend()
     for ax in [axs[1,0], axs[1,1]]:
-        ax.set_xticks(np.arange(4))
-        ax.set_xticklabels(['1/2','1','2','4'])
-        ax.set_xlabel('Dust Scale ($\\tau$)')
-    if len(exps)==4:
-        for ax in [axs[2,0], axs[2,1]]:
-            ax.set_xticks(np.arange(len(titles)))
-            ax.set_xticklabels(titles)
-            ax.set_xlabel('Attribution')
+        ax.set_xticks(np.arange(5))
+        ax.set_xticklabels(['1/2','1','2','4','8'])
+        ax.set_xlabel('Dust Scale ($\lambda$)')
+        ax2 = ax.twinx()
+        ax2.set_yticks([])
+        if long or res == '_vert':
+            ax2.plot([],[],c='k',linestyle='-' ,label='Standard Dust')
+        if res == '_vert':
+            ax2.plot([],[],c='k',linestyle='-.',label='50 vertical levels')
+        if long:
+            ax2.plot([],[],c='k',linestyle='--',label='Longitudinal Dust')
+        ax2.legend()
+    #if len(exps)==4:
+    #    for ax in [axs[2,0], axs[2,1]]:
+    #        ax.set_xticks(np.arange(len(titles)))
+    #        ax.set_xticklabels(titles)
+    #        ax.set_xlabel('Attribution')
 
         #axs[0].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
         #axs[1].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
-    fig.text(0.06,0.5,'Percentage of tracer at pole after 30 sols ($c_{{pole}_{30}}/c_{{pole}_0}$, %)',
+    fig.text(0.08,0.5,'Percentage decrease in polar tracer concentration after 30 sols ($c_{{pole}_{30}}/c_{{pole}_{0}}$, %)',
                 ha='center',va='center',rotation='vertical',fontsize='large')
-
+    fig.text(0.5,0.5,'1/percentage increase in polar tracer concentration after 30 sols ($c_{{pole}_{0}}/c_{{pole}_{30}}$, %)',
+                ha='center',va='center',rotation='vertical',fontsize='large')
     
 
     #cb = fig.colorbar(sm, ax = axs, ticks = np.arange(len(tinds)+1)+1/2, boundaries = np.arange(len(tinds)+1))
@@ -852,7 +899,7 @@ def plot_multiple_times_all(tname='test_tracer', isentropic=True, \
     #             borderaxespad=0, fontsize='large')
 
     fig.savefig(figpath + \
-            '%s_%s_%s_%03d-%03d_%i.%s' % (tname, hem, method, tinds[0], tinds[-1],ylim,ext),
+            '%s%s_%s_%s_%03d-%03d_%i.%s' % (tname, res, hem, method, tinds[0], tinds[-1],ylim,ext),
             bbox_inches='tight', dpi=300)
     
 
@@ -886,6 +933,10 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
         elif exp == 'dust':
             exp = 'Dust Scale'
             lnstl = '-'
+            col = 'xkcd:darkgreen'
+        elif exp == 'vert_dust_only':
+            exp = 'Vert Dust Scale'
+            lnstl = '--'
             col = 'xkcd:darkgreen'
         elif exp == 'attribution':
             exp = 'Attribution'
@@ -922,10 +973,10 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
                 
                 if k == 0:
                     nh.append(rs)
-                    labl = 'Init L$_s$: %i$^\circ$' % (hems.mars_solar_long.isel(time=0).values)
+                    labl = 'L${_{s_0}}\ %i^\circ$ : L${_{s_{30}}}\ %i^\circ$' % (hems.mars_solar_long.isel(time=0).values,hems.mars_solar_long.isel(time=1).values)
                 else:
                     sh.append(rs)
-                    labl = 'Init L$_s$: %i$^\circ$' % (hems.mars_solar_long.isel(time=2).values)
+                    labl = 'L${_{s_0}}\ %i^\circ$ : L${_{s_{30}}}\ %i^\circ$' % (hems.mars_solar_long.isel(time=2).values,hems.mars_solar_long.isel(time=3).values)
                 
                 if exp == '$\gamma = 0.000$':
                     labl = None
@@ -938,7 +989,7 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
         for k in [0,1]:
             if exp == '$\gamma = 0.093$' or exp == '$\gamma = 0.000$':
                 ax = axs[0, k]
-            elif exp == 'Dust Scale':
+            elif exp == 'Dust Scale' or exp == '':
                 ax = axs[1, k]
             else:
                 ax = axs[2, k]
@@ -985,9 +1036,9 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
         ax2.plot([],[],c='k',linestyle='--',label='$\gamma=0.000$')
         ax2.legend()
     for ax in [axs[1,0], axs[1,1]]:
-        ax.set_xticks(np.arange(4))
-        ax.set_xticklabels(['1/2','1','2','4'])
-        ax.set_xlabel('Dust Scale ($\\tau$)')
+        ax.set_xticks(np.arange(5))
+        ax.set_xticklabels(['1/2','1','2','4','8'])
+        ax.set_xlabel('Dust Scale ($\lambda$)')
     if len(exps)==4:
         for ax in [axs[2,0], axs[2,1]]:
             ax.set_xticks(np.arange(len(titles)))
@@ -996,7 +1047,9 @@ def plot_multiple_times_all_from_data(tname = 'test_tracer', isentropic=True, \
 
         #axs[0].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
         #axs[1].set_ylabel('Polar tracer concentration ratio: $x$ sols / initial')
-    fig.text(0.06,0.5,'Percentage of tracer at pole after 30 sols ($c_{{pole}_{30}}/c_{{pole}_0}$, %)',
+    fig.text(0.08,0.5,'Percentage decrease in polar tracer concentration after 30 sols ($c_{{pole}_{30}}/c_{{pole}_{0}}$, %)',
+                ha='center',va='center',rotation='vertical',fontsize='large')
+    fig.text(0.5,0.5,'1/percentage increase in polar tracer concentration after 30 sols ($c_{{pole}_{0}}/c_{{pole}_{30}}$, %)',
                 ha='center',va='center',rotation='vertical',fontsize='large')
 
     
@@ -1028,19 +1081,20 @@ if __name__ == "__main__":
     method="level"
     level = 300
     hem = "nh"
-    ylim = 75
+    ylim = 70
 
     tinds = [60,90,120,150]
-    savedata = False
+    savedata = True
     if savedata:
-        plot_multiple_times_all(
-        level=300,
-        ylim=ylim, tinds = tinds,ext='pdf',
+        plot_multiple_times_all(method=method,
+        level=level,res='_vert',
+        isentropic=isentropic,
+        ylim=ylim, tinds = tinds,ext='pdf',long=True,
         )
     else:
         plot_multiple_times_all_from_data(
-        level=300,
-        ylim=ylim, tinds = tinds,ext='pdf',
+        method=method, level=level,isentropic=isentropic,
+        ylim=ylim, tinds = tinds,ext='pdf',res='_vert',long=True,
         )
 
 # %%

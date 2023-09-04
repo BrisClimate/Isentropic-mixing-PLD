@@ -179,17 +179,24 @@ def find_single_jet(exp_name):
             fill_value="extrapolate",limit=15)
 
         for l in range(len(d2.time)):
+            
             du = d50.isel(time=l)
             dn = du.where(du.lat > 0, drop=True)
             ds = du.where(du.lat < 0, drop=True)
-
-            phi, mx = calc_jet_lat(dn, lat_n)
-            a.append(phi)
-            b.append(mx)
-
-            phi, mx = calc_jet_lat(ds, lat_s)
-            c.append(phi)
-            d.append(mx)
+            try:
+                phi, mx = calc_jet_lat(dn, lat_n)
+                a.append(phi)
+                b.append(mx)
+            except:
+                a.append(np.nan)
+                b.append(np.nan)
+            try:
+                phi, mx = calc_jet_lat(ds, lat_s)
+                c.append(phi)
+                d.append(mx)
+            except:
+                c.append(np.nan)
+                d.append(np.nan)
 
 
         dat = xr.Dataset(data_vars = {"phi_n":(["time"],a),
@@ -211,19 +218,24 @@ if __name__ == "__main__":
     
     exps = []
     
-    for l in ['', '_lh']:
-        for d in ['', '_cdod_clim_scenario_7.4e-05']:
-            for t in ['', '_mola_topo']:
-                exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
+    #for l in ['', '_lh']:
+    #    for d in ['', '_cdod_clim_scenario_7.4e-05']:
+    #        for t in ['', '_mola_topo']:
+    #            exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
 
-    for ep in eps:
-        for gam in gamma:
-            exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
+    #for ep in eps:
+    #    for gam in gamma:
+    #        exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+    #            '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
 
-    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
+    for dust_scale in [7.4e-05, 3.7e-5, 1.48e-4, 2.96e-4, 5.92e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
-
+      exps.append('tracer_vert_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
+      exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_clim_latlon_'+str(dust_scale))
+    
+    exps.append('tracer_MY28_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05')
+   
+    
     for i in exps:
         find_single_jet(i)
                     

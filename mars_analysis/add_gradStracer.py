@@ -109,7 +109,8 @@ def append_grdStrac(exp, r=rmars):
             i_files, concat_dim = 'time', 
             decode_times = False, combine = 'nested',
             )
-    if len(dset.time) == 690:
+    if len(dset.time) == 690 or len(dset.time) == 750:
+      
       dset = dset[[
           "ucomp",
           "vcomp",
@@ -137,16 +138,17 @@ def append_grdStrac(exp, r=rmars):
 
       return dset
 
-def iterate_over_all(eps, top='_mola_topo', lh='_lh',dust='_cdod_clim_scenario_7.4e-05'):
-    gamma = [0.000, 0.093]
-    i = eps
-    for j in gamma:
+def iterate_over_all(exp_name, top='_mola_topo', lh='_lh',dust='_cdod_clim_scenario_7.4e-05',res=''):
+    #gamma = [0.000, 0.093]
+    #i = eps
+    #for j in gamma:
       #for j in gamma:
-        exp_name = 'tracer_soc_mars%s%s_eps_%i_gamma_%.3f%s' % (top, lh, i, j, dust)
-        print(exp_name)
+    #    exp_name = 'tracer_%ssoc_mars%s%s_eps_%i_gamma_%.3f%s' % (res,top, lh, i, j, dust)
+        
         if os.path.isfile(path+exp_name+'/run0023/atmos_daily_interp.nc'):
             
             if not os.path.isfile(path+exp_name+'/atmos.nc'):
+                print(exp_name)
                 print('starting')
               #try:
                 dset = append_grdStrac(exp_name, r=rmars)
@@ -168,12 +170,12 @@ def process_attr_exps(exp_name):
           #except:
           #  continue
 
-def interp_all(eps):
-    gamma = [0.00,0.093]
-    i = eps
-    for j in gamma:
+def interp_all(exp_name,res=''):
+    #gamma = [0.00,0.093]
+    #i = eps
+    #for j in gamma:
       #for j in gamma:
-        exp_name = 'tracer_soc_mars_mola_topo_lh_eps_%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (i, j)
+        #exp_name = 'tracer_%ssoc_mars_mola_topo_lh_eps_%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (res, i, j)
         
         if os.path.isfile(path+exp_name+'/atmos.nc'):
             if not os.path.isfile(path+exp_name+'/atmos_isentropic.nc'):
@@ -215,7 +217,7 @@ def interp_attrs(exp_name, r=rmars):
 
               d.to_netcdf(path + exp_name + '/atmos_isentropic.nc', mode='w')
 
-  
+#%%
 
 if __name__ == "__main__":
     
@@ -223,17 +225,20 @@ if __name__ == "__main__":
     gamma = [0.093, 0.00]
     
     exps = []
-    for l in ['', '_lh']:
-      for d in ['', '_cdod_clim_scenario_7.4e-05']:
-        for t in ['', '_mola_topo']:
-          exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
+    
+    #for d in ['', '_cdod_clim_scenario_7.4e-05']:
+    #  for l in ['', '_lh']:
+    #    for t in ['', '_mola_topo']:
+    #      exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
     for ep in eps:
       for gam in gamma:
         exps.append('tracer_soc_mars_mola_topo_lh_eps_%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
     
-    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
+    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4,5.92e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
-
+      exps.append('tracer_vert_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
+      exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_clim_latlon_'+str(dust_scale))
+    exps.append('tracer_MY28_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05')
     
     for i in exps:
       iterate_over_all(i)

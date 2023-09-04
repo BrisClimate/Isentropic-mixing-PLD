@@ -6,6 +6,7 @@ import os, sys
 
 sys.path.append('../')
 import atmospy
+import pot_vort
 
 from multiprocessing import Pool, cpu_count
 import windspharm.xarray as windx
@@ -44,10 +45,10 @@ def calculate_PV(d, **kwargs):
     rsphere = kwargs.pop('rsphere', 3.3962e6)    # mean planetary radius
     dim     = kwargs.pop(    'dim', 'pfull')
 
-    theta = atmospy.potential_temperature(
+    theta = pot_vort.potential_temperature(
         d.pfull, d.temp, kappa=kappa, p0=p0,
     )
-    PV_isobaric = atmospy.potential_vorticity_baroclinic(
+    PV_isobaric = pot_vort.potential_vorticity_baroclinic(
         d.ucomp, d.vcomp, theta, dim, omega=omega, g=g, rsphere=rsphere,
     )
     return theta, PV_isobaric
@@ -78,7 +79,7 @@ def interpolate_to_isentropic(d, **kwargs):
         d = d.transpose('time', 'pfull', 'lat', 'lon')
 
         pres, PV_i, grdSpv_i, u_i, v_i, tracer_i, grd_tr_i, \
-         = atmospy.isent_interp(
+         = pot_vort.isent_interp(
             thetalevs, d.pfull, d.temp, d.PV,
             d.grdSpv, d.ucomp,
             d.vcomp, d.test_tracer,

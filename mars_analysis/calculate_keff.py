@@ -6,7 +6,10 @@ import os, sys
 
 sys.path.append('../')
 
-import Contour2D, latitude_lengths_at, add_latlon_metrics, get_planet_parameters
+from xcontour import Contour2D, \
+    latitude_lengths_at, \
+    add_latlon_metrics, \
+    get_planet_parameters
 
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
@@ -41,7 +44,7 @@ def calculate_keff(dset, deg2m, tracer_name, r):
     if tracer_name == 'test_tracer':
         tracer = dset.test_tracer
         try:
-            grdS = dset.grdStr_2
+            grdS = dset.grdStr
         except:
             return
     else:
@@ -51,6 +54,7 @@ def calculate_keff(dset, deg2m, tracer_name, r):
             tracer = dset.pv
         #grdS = dset.grdSpv
         grdS = dset.grdSpv
+
 
     N  = 121           # increase the contour number may get non-monotonic A(q) relation
     increase = True    # Y-index increases with latitude (sometimes not)
@@ -118,7 +122,7 @@ def setup(ds, tracer_name='test_tracer', planet='earth'):
         for j in range(len(ds.time)):
             dset = ds.isel(time=j)
             ds_latEq = calculate_keff(dset, deg2m, tracer_name, r)
-        
+
             ds_full.append(ds_latEq)
         
         ds_keff = xr.concat(ds_full, dim="time")
@@ -132,41 +136,12 @@ def setup(ds, tracer_name='test_tracer', planet='earth'):
     
     return ds_keff
 
-def process_attr_exps(exp_name):
+def iterate_over_all(exp_name):
+    #gamma = [0.0,0.093]
     
-    print(exp_name)
-    if os.path.isfile(path+exp_name+'/atmos.nc'):
-        ds = xr.open_dataset(
-                path+exp_name+'/atmos.nc', 
-                decode_times = False,
-                )
-        ds = ds.sortby("pfull", ascending=False)
-
-        dset = ds.rename(
-                    {
-                        'pfull':'level',
-                        'lat'  :'latitude',
-                        'lon'  :'longitude',
-                    })
-        x = []
-        for tname in ['test_tracer']:#, 'PV']:
-            if not os.path.isfile(path+exp_name+'/keff_%s.nc' % tname):
-                #x.append(setup(dset, tracer_name=tname))
-                x = setup(dset, tracer_name=tname, planet='mars')
-                x["mars_solar_long"] = ds.mars_solar_long
-                x.to_netcdf(path + exp_name + '/keff_%s.nc' % tname, mode='w')
-                print('%s keff calculated' % tname)
-            else:
-                print('%s already exists' % tname)
-        #d = xr.concatenate(x, dim = "tracer_name")
-        #d.to_netcdf(path + exp_name + '/keff.nc', mode='w')
-
-def iterate_over_all(eps):
-    gamma = [0.0,0.093]
-    
-    for ga in gamma:
-        exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' +\
-                '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps, ga)
+    #for ga in gamma:
+        #exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' +\
+        #        '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps, ga)
         print(exp_name)
         if os.path.isfile(path+exp_name+'/atmos.nc'):
             ds = xr.open_dataset(
@@ -193,34 +168,6 @@ def iterate_over_all(eps):
                     print('%s already exists' % tname)
             #d = xr.concatenate(x, dim = "tracer_name")
             #d.to_netcdf(path + exp_name + '/keff.nc', mode='w')
-
-def iterate_over_isentropic(eps):
-    gamma = [0.0,0.093]
-    
-    for ga in gamma:
-        exp_name = 'tracer_soc_mars_mola_topo_lh_eps_' +\
-                '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (eps, ga)
-        if os.path.isfile(path+exp_name+'/atmos_isentropic.nc'):
-            ds = xr.open_dataset(
-                    path+exp_name+'/atmos_isentropic.nc', 
-                    decode_times = False,
-                    )
-
-            dset = ds.rename(
-                        {
-                            'lat'  :'latitude',
-                            'lon'  :'longitude',
-                        })
-            x = []
-            for tname in ['test_tracer', 'PV']:
-                if not os.path.isfile(path+exp_name+'/keff_isentropic_%s.nc' % tname):
-                    print(exp_name)
-                    x = setup(dset, tracer_name=tname, planet='mars')
-                    x["mars_solar_long"] = ds.mars_solar_long
-                    x.to_netcdf(path + exp_name + '/keff_isentropic_%s.nc' % tname, mode='w')
-                    print('%s keff calculated' % tname)
-            #d = xr.concatenate(x, dim = "tracer_name")
-            #d.to_netcdf(path + exp_name + '/keff_isentropic.nc', mode='w')
 
 def calculate_isentropic(exp_name):
     if os.path.isfile(path+exp_name+'/atmos_isentropic.nc'):
@@ -345,24 +292,33 @@ if __name__ == "__main__":
     gamma = [0.0,0.093]
     
     exps = []
-    
-    for l in ['', '_lh']:
-        for d in ['', '_cdod_clim_scenario_7.4e-05']:
-            for t in ['', '_mola_topo']:
-                exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
 
-    for ep in eps:
-        for gam in gamma:
-            exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
-                '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
-
-    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4]:
+    for dust_scale in [7.4e-05, 2.96e-4, 3.7e-5,1.48e-4,5.92e-4]:
       exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
+      exps.append('tracer_vert_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_'+str(dust_scale))
+      exps.append('tracer_soc_mars_mola_topo_lh_eps_25_gamma_0.093_clim_latlon_'+str(dust_scale))
+    exps.append('tracer_MY28_soc_mars_mola_topo_lh_eps_25_gamma_0.093_cdod_clim_scenario_7.4e-05')
+   
+
+    
+    #for l in ['', '_lh']:
+    #    for d in ['', '_cdod_clim_scenario_7.4e-05']:
+    #        for t in ['', '_mola_topo']:
+    #            exps.append('tracer_soc_mars%s%s_eps_25_gamma_0.093%s' % (t, l, d))
+#
+    #for ep in eps:
+    #    for gam in gamma:
+    #        exps.append('tracer_soc_mars_mola_topo_lh_eps_' + \
+    #            '%i_gamma_%.3f_cdod_clim_scenario_7.4e-05' % (ep, gam))
 
     
     for i in exps:
+    #with Pool(processes=len(exps)) as pool:
+        #pool.map(iterate_over_all, exps)
+    #    pool.map(calculate_isentropic, exps)
         iterate_over_all(i)
         
         calculate_isentropic(i)
-        
-        iterate_over_isentropic(i)
+    
+
+# %%
