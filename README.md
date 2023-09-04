@@ -47,6 +47,9 @@ These should be run in the environment plotting using [plotting.yml]((https://gi
 ### Figure 7-12
 Plotted in [mars_analysis/plot_HC_anomaly.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_HC_anomaly.py) using the function plot_psi_cross_section
 
+### Figure 13, Figure 14
+Plotted in [mars_analysis/plot_deposition_timeseries.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/plot_deposition_timeseries.py)
+
 ## To calculate effective diffusivity from model output
 
 The gradient of tracer is calculated in [mars_analysis/add_gradStracer.py](https://github.com/emilyrball/PLD-analysis/blob/main/mars_analysis/add_gradStracer.py) (either on pressure or theta levels)
