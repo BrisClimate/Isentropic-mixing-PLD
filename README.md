@@ -5,7 +5,7 @@
 [atmospy/](https://github.com/emilyrball/PLD-analysis/tree/main/atmospy) contains useful calculation tools.
 [pot_vort/](https://github.com/emilyrball/PLD-analysis/tree/main/pot_vort) contains tools for calculating potential vorticity.
 
-##### [atmospy/xcontour](https://github.com/emilyrball/PLD-analysis/tree/main/atmospy/xcontour) is adapted from [https://github.com/miniufo/xcontour](https://github.com/miniufo/xcontour), with thanks to the author for making their code available.
+##### [xcontour](https://github.com/emilyrball/PLD-analysis/tree/main/xcontour) is adapted from [https://github.com/miniufo/xcontour](https://github.com/miniufo/xcontour), with thanks to the author for making their code available.
 
 [mars_analysis/](https://github.com/emilyrball/PLD-analysis/tree/main/mars_analysis) contains scripts used to plot figures.
 
